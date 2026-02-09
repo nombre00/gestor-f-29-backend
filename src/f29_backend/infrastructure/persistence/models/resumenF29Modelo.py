@@ -1,7 +1,7 @@
 # Modelo de mapeo para tablas SQL.
 
 from sqlalchemy import Column, Integer, String, JSON
-from src.core.database import Base
+from f29_backend.core.database import Base
 
 
 class ResumenF29DB(Base):
@@ -11,7 +11,7 @@ class ResumenF29DB(Base):
     periodo = Column(String(7), nullable=False, unique=True, index=True)  # clave natural: 2026-02
     ivapp = Column(Integer, default=0)
     remanente = Column(Integer, default=0)
-    remanente_mes_anterior = Column(Integer, default=0)
+    remanenteMesAnterior = Column(Integer, default=0)
     tt = Column(Integer, default=0)
 
     # Campos complejos → JSON (SQLAlchemy los serializa automáticamente)
