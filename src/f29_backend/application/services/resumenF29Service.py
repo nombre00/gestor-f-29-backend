@@ -1,7 +1,10 @@
 
 # Bibliotecas
 import os
+import io
+import logging
 from typing import Dict
+from fastapi import HTTPException
 # Clases de los imputs.
 from f29_backend.domain.entities.resumenVentas import ResumenVentas
 from f29_backend.domain.entities.resumenCompras import ResumenCompras
@@ -61,7 +64,6 @@ def controladorResumenF29_v4(
 
     # LLenamos la plantilla del resumen con los datos del resumen.
     resumenF29Escritor2(resumen, plantillaResumen)
-
 
     # Guardamos en carpeta de salidas. 
     # Verificamos.
@@ -139,3 +141,64 @@ def exportarAExcel(resumen: ResumenF29, ruta: str):
 
     # Exportamos.
     plantillaResumen.save(ruta)
+
+
+
+
+
+# Funciones que gestionan inputs en bytes.
+logger = logging.getLogger(__name__)
+def procesar_f29_y_obtener_resumen(
+    ventas_bytes: bytes,
+    compras_bytes: bytes,
+    remuneraciones_bytes: bytes,
+    honorarios_bytes: bytes,
+    remanente: int,
+    importaciones: dict
+) -> ResumenF29:
+    try:
+        # ── Parseo de ventas ───────────────────────────────────────────────────────
+        df_ventas = parse_detalle_ventas(ventas_bytes)
+        rv = parse_df_to_resumen_ventas(df_ventas)
+
+        # ── Parseo de compras ──────────────────────────────────────────────────────
+        df_compras = parse_detalle_compras(compras_bytes)  # ← corregido
+        rc = parse_df_to_resumen_compras(df_compras)
+
+        # ── Parseo de remuneraciones ───────────────────────────────────────────────
+        lr = parse_libro_remuneraciones(remuneraciones_bytes)
+
+        # ── Parseo de honorarios ───────────────────────────────────────────────────
+        rh = parse_registro_honorarios(honorarios_bytes)
+
+        # ── Generación del resumen ─────────────────────────────────────────────────
+        resumen: ResumenF29 = resumenGenerador2(
+            rv, rc, lr, rh, remanente, importaciones
+        )
+
+        return resumen
+
+    except Exception as e:
+        logger.error(f"Error al procesar F29: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error al procesar los archivos: {str(e)}"
+        )
+
+
+
+def generar_excel_en_memoria(resumen: ResumenF29) -> bytes:
+    try:
+        plantilla = generar_plantilla_resumen_f292()
+        resumenF29Escritor2(resumen, plantilla)
+
+        output = io.BytesIO()
+        plantilla.save(output)
+        output.seek(0)
+        return output.read()
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al generar Excel en memoria: {str(e)}"
+        )
