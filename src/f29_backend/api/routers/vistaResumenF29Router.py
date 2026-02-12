@@ -1,6 +1,6 @@
 # Rutas de la vista vistaResumenF29.
 
-# Bibliotecas.
+# Bibliotecas. 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 import io
