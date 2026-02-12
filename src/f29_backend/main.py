@@ -21,7 +21,7 @@
 
 
 
-# Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 8000
+# Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 5000
 
 
 
