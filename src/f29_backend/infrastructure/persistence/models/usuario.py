@@ -46,9 +46,9 @@ class Usuario(Base):
         nullable=False
     )
     
+    # Relaciones.
     # Relación Many-to-One con Empresa
     empresa = relationship("Empresa", back_populates="usuarios")
-    
     # Relación One-to-Many con Cliente (clientes asignados)
     clientes_asignados = relationship(
         "Cliente",

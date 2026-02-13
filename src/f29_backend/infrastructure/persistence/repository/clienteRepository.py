@@ -9,6 +9,7 @@ from f29_backend.infrastructure.persistence.models import Cliente
 
 
 class ClienteRepository:
+    # Abre una conección, inicia la transacción, cada operación es una transacción.
     def __init__(self, db: Session):
         self.db = db
     
@@ -23,9 +24,9 @@ class ClienteRepository:
             activo=True,
             **kwargs
         )
-        self.db.add(cliente)
-        self.db.commit()
-        self.db.refresh(cliente)
+        self.db.add(cliente)  # Agrega.
+        self.db.commit()  # Guarda.
+        self.db.refresh(cliente)  # Regresca.
         return cliente
     
     def find_by_id(self, cliente_id: int) -> Optional[Cliente]:
