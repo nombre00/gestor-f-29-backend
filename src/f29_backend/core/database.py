@@ -1,24 +1,25 @@
 # Conección.
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base 
 
 # URL de conexión a MySQL
-# Cambia 'tu_usuario', 'tu_contraseña', 'localhost' y 'f29_gestor' según tu setup
-# Ejemplo con XAMPP/MAMP/local: root sin password → mysql+mysqlconnector://root:@localhost/f29_gestor
-DATABASE_URL = "mysql+mysqlconnector://tu_usuario:tu_contraseña@localhost:3306/f29_gestor"
+DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/gestorf29?charset=utf8mb4"
 
-# Crea el motor de conexión
-engine = create_engine(DATABASE_URL)
+# Crear engine (UNA SOLA VEZ)
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,        # Verifica que la conexión esté viva
+    pool_recycle=3600,         # Recicla conexiones cada hora
+    echo=True                  # Muestra SQL en consola (cambiar a False en producción)
+)
 
-# Crea una fábrica de sesiones (para transacciones con la DB)
+# Session factory (UNA SOLA VEZ)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Esta es la clase Base que todos tus modelos heredan
+# Base para los modelos
 Base = declarative_base()
 
-
-# Dependencia para inyectar la sesión DB en los endpoints (muy útil en FastAPI)
+# Dependency para FastAPI
 def get_db():
     db = SessionLocal()
     try:

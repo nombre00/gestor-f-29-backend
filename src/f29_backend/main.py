@@ -24,38 +24,52 @@
 # Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 5000
 
 
-
+# Bibliotecas.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-# Importa tus routers
-from f29_backend.api.routers import gestorF29Router  
+from sqlalchemy.orm import Session
+# Routers.
+from f29_backend.api.routers import vistaGestorF29Router  
 from f29_backend.api.routers import vistaResumenF29Router
+# Persistencia.
+from f29_backend.core.database import engine, get_db, Base
+from f29_backend.infrastructure.persistence.models import Empresa, Usuario, Cliente, resumenF29Modelo
 
-# Crea la aplicación FastAPI
+# Crear app
 app = FastAPI(
     title="API Gestor F29 - SII",
     description="Backend para procesar y generar resúmenes Formulario 29",
     version="0.1.0",
-    docs_url="/docs",           # Swagger UI en /docs
-    redoc_url="/redoc",         # ReDoc en /redoc
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Opcional pero muy recomendado: permitir CORS si el frontend es web o desde otro dominio
-# (por ahora no es estrictamente necesario con Tkinter, pero no hace daño y es buena práctica)
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # En producción: ["http://localhost:3000", "https://tu-dominio.com"]
+    allow_origins=["*"],  # En producción: dominios específicos
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Incluye los routers (endpoints)
-app.include_router(gestorF29Router.router) 
+# Incluir routers
+app.include_router(vistaGestorF29Router.router) 
 app.include_router(vistaResumenF29Router.router)
 
-# Opcional: raíz para verificar que el servidor está vivo
+# Root
 @app.get("/")
 async def root():
     return {"message": "API Gestor F29 - SII está corriendo"}
+
+# Crear tablas al iniciar
+@app.on_event("startup")
+def startup_event():
+    print("Creando tablas en la base de datos...")
+    Base.metadata.create_all(bind=engine)
+    print("Tablas creadas exitosamente")
+
+# Health check (opcional pero útil)
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "database": "connected"}
