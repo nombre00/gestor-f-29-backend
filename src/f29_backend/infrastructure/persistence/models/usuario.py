@@ -1,6 +1,6 @@
 # Trabajador de la empresa, usuario del software.
 
-
+# Bibliotecas.
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, Enum, func
 from sqlalchemy.orm import relationship
 import enum
@@ -56,5 +56,9 @@ class Usuario(Base):
         foreign_keys="Cliente.asignado_a_usuario_id"
     )
     
+    # Métodos.
+    # Print simple.
     def __repr__(self):
         return f"<Usuario(id={self.id}, email={self.email}, rol={self.rol})>"
+    
+    

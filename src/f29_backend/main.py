@@ -19,9 +19,15 @@
 # Infrastructure: incluye adaptadores (parsers y writers) y presistencia: archivo conección y carpetas: models y repository
 
 
+# gestorf29-backend/src/f29_backend
 
+# Para moverme a la carptea raiz:     $env:PYTHONPATH="src" 
 
-# Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 5000
+# Con este comando le decimos al backend en que puerto correr.
+# Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 8000
+
+# Para crear el entorno virtual:            python -m venv .venv
+# Para correr el entorno virtual:           .\.venv\Scripts\Activate.ps1
 
 
 # Bibliotecas.

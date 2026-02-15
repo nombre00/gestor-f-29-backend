@@ -1,6 +1,9 @@
+
+# Bibliotecas..
 import os
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side
+# Módulos.
 from f29_backend.domain.entities.resumenF29 import ResumenF29
 
 # Flujo de acciones: recibimos el resumen, recibimos la plantilla resumen f-29, tomamos los datos del resumen, ingresamos esos datos a la plantilla del resumen f-29 y retornamos un workbook.

@@ -1,9 +1,13 @@
 # Conección.
+
+# Bibliotecas.
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base 
+# Módulos.
+from f29_backend.core.settings import settings
 
-# URL de conexión a MySQL
-DATABASE_URL = "mysql+pymysql://root:password@localhost:3306/gestorf29?charset=utf8mb4"
+# Asignamos la url a una variable.
+DATABASE_URL = settings.DATABASE_URL
 
 # Crear engine: el comtor que se comunica con la base de datos.
 engine = create_engine(

@@ -1,8 +1,10 @@
 
+# Bibliotecas.
 import pandas as pd
 from typing import Dict
 pd.set_option('future.no_silent_downcasting', True)
 from io import StringIO
+# Módulos.
 from f29_backend.domain.entities.detalleVentas import DetalleVentas
 from f29_backend.domain.entities.resumenVentas import ResumenVentas
 

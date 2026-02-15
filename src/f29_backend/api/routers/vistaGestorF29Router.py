@@ -1,12 +1,15 @@
 # Rutas de la vista gestorF29.
 
+
+# Bibliotecas.
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 import io
 import json
-
+# Módulos.
 from f29_backend.application.services.resumenF29Service import procesar_f29_y_obtener_resumen, generar_excel_en_memoria
 from f29_backend.domain.entities.resumenF29 import ResumenF29
+from f29_backend.core.security import CurrentUser
 
 
 router = APIRouter(prefix="/api/f29", tags=["f29"])
@@ -14,6 +17,7 @@ router = APIRouter(prefix="/api/f29", tags=["f29"])
 
 @router.post("/procesar")
 async def procesar_resumen(
+    current_user: CurrentUser,  # Token del ususario ingresado.
     remanente_anterior: int = Form(0),
     importaciones: str = Form(None),
     archivo_ventas: UploadFile = File(...),
@@ -43,6 +47,7 @@ async def procesar_resumen(
 
 @router.post("/generar-excel")
 async def generar_excel(
+    current_user: CurrentUser,  # Token del ususario ingresado.
     remanente_anterior: int = Form(0),
     importaciones: str = Form(None),
     archivo_ventas: UploadFile = File(...),

@@ -10,13 +10,14 @@ from typing import Dict, List, Any
 from f29_backend.domain.entities.resumenF29 import ResumenF29
 from f29_backend.infrastructure.adapters.writers.resumenPlantilla import generar_plantilla_resumen_f292
 from f29_backend.infrastructure.adapters.writers.resumenF29Escritor import resumenF29Escritor2
+from f29_backend.core.security import CurrentUser
 
 
 router = APIRouter(prefix="/api/f29", tags=["f29"])
 
 
 @router.post("/resumen/exportar")
-async def exportar_resumen(body: Dict[str, Any]):
+async def exportar_resumen(current_user: CurrentUser, body: Dict[str, Any]):
     try:
         resumen_dict = body.get("resumen")
         if not resumen_dict:

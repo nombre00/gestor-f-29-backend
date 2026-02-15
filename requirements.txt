@@ -1,0 +1,22 @@
+# requirements.txt
+# Paquetes principales del backend (FastAPI + auth + DB + procesamiento de Excel)
+
+fastapi>=0.115.0                  # Framework principal + APIRouter, Depends, HTTPException, UploadFile, etc.
+uvicorn>=0.30.0                   # Servidor ASGI (para correr la app: uvicorn main:app)
+sqlalchemy>=2.0.0                 # ORM, create_engine, sessionmaker, Column, relationship, etc.
+mysql-connector-python>=8.0.0     # Driver MySQL (si usas mysql-connector; si usas pymysql cámbialo)
+pydantic>=2.0.0                   # BaseModel, Field, etc.
+pydantic-settings>=2.0.0          # BaseSettings + SettingsConfigDict para leer .env
+passlib[bcrypt]>=1.7.4            # CryptContext para hashing de contraseñas.
+python-jose[cryptography]>=3.3.0  # JWT (import jwt / pyjwt).
+python-multipart>=0.0.9           # Necesario para UploadFile y Form en FastAPI.
+
+# Procesamiento de archivos Excel y datos.
+pandas>=2.0.0                     # pd.DataFrame, read_excel, etc.
+openpyxl>=3.1.0                   # Soporte para Excel (Workbook, load_workbook, estilos: Font, Alignment, etc).
+
+# Procesar JSONs.
+orjson>=3.9.0                     # Parser JSON más rápido (FastAPI lo usa si está instalado)
+
+# Para la base de datos.
+pymysql                           # Para que reconozca la base de datos en MySQL.
