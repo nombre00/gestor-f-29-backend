@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from f29_backend.core.settings import settings
 
 # Asignamos la url a una variable.
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.DATABASE_URL.get_secret_value()
 
 # Crear engine: el comtor que se comunica con la base de datos.
 engine = create_engine(

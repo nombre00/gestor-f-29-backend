@@ -33,12 +33,14 @@ class Empresa(Base):
         back_populates="empresa",
         cascade="all, delete-orphan"  # Si eliminamos empresa, eliminamos usuarios.
     )
-    
     clientes = relationship(
         "Cliente",
         back_populates="empresa",
         cascade="all, delete-orphan"  # Si eliminamos empresa eliminamos clientes.
     )
+    invitaciones = relationship("Invitacion", 
+        back_populates="empresa", 
+        cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Empresa(id={self.id}, rut={self.rut}, razon_social={self.razon_social})>"

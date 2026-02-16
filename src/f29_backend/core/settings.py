@@ -37,7 +37,7 @@ class Settings(BaseSettings):  # BaseSettings es la que carga las variables de e
         env_file=".env",                # Carga automática desde .env
         env_file_encoding="utf-8",
         case_sensitive=False,           # APP_NAME == app_name
-        extra="ignore",                 # Ignora vars extras en .env
+        extra="ignore",                # Ignora vars extras en .env
         env_nested_delimiter="__",      # Opcional: para vars anidadas si después lo necesitas
     )
 

@@ -3,7 +3,7 @@
 
 # Bibliotecas.
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union
+from typing import Any, Union, List
 from jose import JWTError, jwt, ExpiredSignatureError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException
@@ -14,7 +14,7 @@ from fastapi import Depends, HTTPException, status
 # Módulos.
 from f29_backend.core.database import get_db
 from f29_backend.core.settings import settings
-from f29_backend.infrastructure.persistence.models.usuario import Usuario
+from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUsuario
 
 
 # Contexto de hashing de contraseñas (bcrypt).
@@ -53,7 +53,7 @@ def create_access_token(
         )
 
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY.get_secret_value() , algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -74,7 +74,7 @@ async def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            settings.SECRET_KEY,
+            settings.SECRET_KEY.get_secret_value() ,
             algorithms=[ALGORITHM],
         )
         user_id_str: str | None = payload.get("sub")
@@ -109,5 +109,19 @@ async def get_current_user(
     return user
 
 
+# Valida el rol.
+def require_role(roles_permitidos: List[RolUsuario]):
+    async def role_checker(current_user: Usuario = Depends(get_current_user)) -> Usuario:
+        if current_user.rol not in roles_permitidos:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Acceso denegado. Se requiere uno de los siguientes roles: {[r.value for r in roles_permitidos]}"
+            )
+        return current_user
+    
+    return role_checker
+
+
 
 CurrentUser = Annotated[Usuario, Depends(get_current_user)]
+AdminUser = Annotated[Usuario, Depends(require_role([RolUsuario.ADMIN]))]
