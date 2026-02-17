@@ -123,5 +123,7 @@ def require_role(roles_permitidos: List[RolUsuario]):
 
 
 
-CurrentUser = Annotated[Usuario, Depends(get_current_user)]
-AdminUser = Annotated[Usuario, Depends(require_role([RolUsuario.ADMIN]))]
+# Ayudadores para el rol
+SuperUser = Annotated[Usuario, Depends(require_role([RolUsuario.SUPER]))]  # Usuario sudo.
+AdminUser = Annotated[Usuario, Depends(require_role([RolUsuario.ADMIN]))]  # Administrador empresa.
+CurrentUser = Annotated[Usuario, Depends(get_current_user)]  # Administador sus clientes.

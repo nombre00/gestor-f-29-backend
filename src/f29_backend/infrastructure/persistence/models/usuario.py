@@ -10,9 +10,9 @@ from f29_backend.core.database import Base
 
 # Enum para roles
 class RolUsuario(str, enum.Enum):
+    SUPER = "super"
     ADMIN = "admin"
     CONTADOR = "contador"
-    ASISTENTE = "asistente"
 
 class Usuario(Base):
     __tablename__ = 'usuario'

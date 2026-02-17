@@ -14,10 +14,11 @@ class UsuarioResponse(BaseModel):
     apellido: Optional[str]
     rol: RolUsuario
     activo: bool
-    empresa_id: int
-    ultimo_acceso: Optional[datetime]
-    created_at: datetime
-    updated_at: datetime
+    # Datos opcionales, esto porque algunas respuestas no requieren ni dan tantos datos.
+    empresa_id: Optional[int] = None          # ← hazlo Optional
+    ultimo_acceso: Optional[datetime] = None  # ← ya era Optional, pero confirma
+    created_at: Optional[datetime] = None     # ← hazlo Optional si no siempre lo cargas
+    updated_at: Optional[datetime] = None     # ← igual
     
     class Config:
         from_attributes = True
