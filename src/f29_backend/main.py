@@ -23,6 +23,7 @@
 # Instalaciones que faltan en el requirements:
     # pip install bcrypt==4.2.1 
     # pip install pydantic[email]
+    # pip install resend
 
 
 

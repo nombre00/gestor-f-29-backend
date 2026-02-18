@@ -1,4 +1,4 @@
-
+# Schema de invitaciones a usuarios nuevos.
 
 # Bibliotecas.
 from pydantic import BaseModel, EmailStr, Field

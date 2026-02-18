@@ -3,16 +3,39 @@ from pydantic import Field, SecretStr  # ← SecretStr para ocultar en logs
 
 
 class Settings(BaseSettings):  # BaseSettings es la que carga las variables de entorno, así referenciamos el .env.
+    # Para seguridad.
     # ── Claves secretas ── (usa SecretStr para que no se muestren en logs/debug)
     SECRET_KEY: SecretStr = Field(  # Oculto en los logs.
         default=...,  # ← "..." significa "obligatorio, no hay default"
         description="Clave secreta para firmar JWT. Obligatoria."
     )
 
+
+
+    # Para la base de datos.
     # ── Base de datos ──
     DATABASE_URL: SecretStr = Field(  # Oculto en los logs.
         default=...,
         description="URL completa de conexión a la BD (incluye user:pass)"
+    )
+
+
+
+    # Para envios de mail.
+    # llave de resend: para envio de mails.
+    RESEND_API_KEY: SecretStr = Field(
+        default=...,
+        description="llave de resend para hacer envios de mails."
+    )
+    # Mail que envia.
+    RESEND_FROM_EMAIL: SecretStr = Field(
+        default=...,
+        description="mail que manda los mails, dominio de la app."
+    )
+    # Front (para el seteo)
+    FRONTEND_URL: SecretStr = Field(
+        default=...,
+        description="el front..."
     )
 
     # ── Configuración general ──
