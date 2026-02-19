@@ -164,3 +164,47 @@ def desactivar_cliente(
 
     repo.delete(cliente_id)
     return {"message": "Cliente desactivado exitosamente"}
+
+
+
+# Reasignar cliente.
+@router.put("/{cliente_id}/reasignar", response_model=ClienteResponse)
+def reasignar_cliente(
+    cliente_id: int,
+    nuevo_usuario_id: int,  # Query param: /api/clientes/5/reasignar?nuevo_usuario_id=3
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_role([RolUsuario.ADMIN, RolUsuario.SUPER]))
+):
+    """
+    Reasigna un cliente a otro contador de la misma empresa.
+    Solo admins pueden reasignar.
+    """
+    repo = ClienteRepository(db)
+    cliente = repo.find_by_id(cliente_id)
+
+    if not cliente:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
+
+    if cliente.empresa_id != current_user.empresa_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
+
+    # Verificar que el nuevo usuario existe, pertenece a la empresa y es contador.
+    nuevo_usuario = db.query(Usuario).filter(
+        Usuario.id == nuevo_usuario_id,
+        Usuario.empresa_id == current_user.empresa_id,
+        Usuario.activo == True
+    ).first()
+
+    if not nuevo_usuario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El usuario destino no existe o no pertenece a esta empresa"
+        )
+
+    if nuevo_usuario.rol != RolUsuario.CONTADOR:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo se puede reasignar a un usuario con rol contador"
+        )
+
+    return repo.reasignar(cliente_id, nuevo_usuario_id)

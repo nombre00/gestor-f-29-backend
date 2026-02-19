@@ -43,11 +43,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 # Routers.
+from f29_backend.api.routers import authRouter
+from f29_backend.api.routers import clienteRouter
+from f29_backend.api.routers import invitacionesRouter
+from f29_backend.api.routers import resumenF29Router
+from f29_backend.api.routers import usuariosRouter
 from f29_backend.api.routers import vistaGestorF29Router  
 from f29_backend.api.routers import vistaResumenF29Router
-from f29_backend.api.routers import usuariosRouter
-from f29_backend.api.routers import invitacionesRouter
-from f29_backend.api.routers import authRouter
+
+
 # Persistencia.
 from f29_backend.core.database import engine, get_db, Base
 from f29_backend.infrastructure.persistence.models import Empresa, Usuario, Cliente, resumenF29Modelo
@@ -71,11 +75,16 @@ app.add_middleware(
 )
 
 # Incluir routers 
+app.include_router(authRouter.router)
+app.include_router(clienteRouter.router)
+app.include_router(invitacionesRouter.router)
+app.include_router(resumenF29Router.router)
+app.include_router(usuariosRouter.router)
 app.include_router(vistaGestorF29Router.router) 
 app.include_router(vistaResumenF29Router.router)
-app.include_router(usuariosRouter.router)
-app.include_router(invitacionesRouter.router)
-app.include_router(authRouter.router)
+
+
+
 
 # Root
 @app.get("/")
