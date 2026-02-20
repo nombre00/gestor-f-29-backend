@@ -215,11 +215,11 @@ def resumenF29Escritor2(resumen: ResumenF29, plantilla: openpyxl.Workbook) -> op
         # Linea 32, Notas de Débito recibidas.
         if fila.get('tipo') == 56:  # en esta fila ingresamos los valores de los códigos son = 56, 531, 532
             valor56 = fila.get('neto')  # código 56.
-            cell(31, 6, valor61 , align=right)  # Ingresamos el texto.
+            cell(32, 6, valor61 , align=right)  # Ingresamos el texto.
             valor531 = fila.get('td')  # código 531.
-            cell(31, 8, valor531, align=right)  # Ingresamos el texto.
+            cell(32, 8, valor531, align=right)  # Ingresamos el texto.
             valor532 = fila.get('iva_rec')  # código 532.
-            cell(31, 10, valor532, align=right)  # Ingresamos el texto.
+            cell(32, 10, valor532, align=right)  # Ingresamos el texto.
 
         # Linea 33, Form.depago de impotaciones del giro.
         if fila.get('tipo') == 914:  # en esta fila ingresamos los valores de los códigos son = 914, 534, 534

@@ -1,27 +1,24 @@
+# Router de clientes.
+
+
+# Bibliotecas.
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+# Módulos.
 from f29_backend.core.database import get_db
 from f29_backend.core.security import get_current_user, require_role
 from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUsuario
 from f29_backend.infrastructure.persistence.repository.clienteRepository import ClienteRepository
-from f29_backend.api.schemas.clienteSchema import (
-    ClienteCreate, ClienteUpdate, ClienteResponse, ClienteListResponse
-)
+from f29_backend.api.schemas.clienteSchema import ClienteCreate, ClienteUpdate, ClienteResponse, ClienteListResponse
 
+
+# Prefijo de las rutas de este archivo.
 router = APIRouter(prefix="/api/clientes", tags=["clientes"])
 
 
+# Lista clientes, sensible al rol de quien consulta.
 @router.get("", response_model=ClienteListResponse)
-def listar_clientes(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Lista clientes según el rol:
-    - Admin: todos los clientes de la empresa
-    - Contador: solo sus clientes asignados
-    """
+def listar_clientes(db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
 
     if current_user.rol in [RolUsuario.ADMIN, RolUsuario.SUPER]:
@@ -32,17 +29,9 @@ def listar_clientes(
     return {"clientes": clientes, "total": len(clientes)}
 
 
+# Busca un cliente por id, sensible al rol de quien consulta.
 @router.get("/{cliente_id}", response_model=ClienteResponse)
-def obtener_cliente(
-    cliente_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Obtiene un cliente por ID.
-    - Admin: cualquier cliente de su empresa
-    - Contador: solo sus clientes asignados
-    """
+def obtener_cliente(cliente_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
     cliente = repo.find_by_id(cliente_id)
 
@@ -61,17 +50,9 @@ def obtener_cliente(
     return cliente
 
 
+# Crea un nuevo cliente, sensible al rol de quien realiza la operación.
 @router.post("", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
-def crear_cliente(
-    cliente_data: ClienteCreate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Crea un nuevo cliente.
-    - Admin: puede asignar a cualquier usuario de la empresa
-    - Contador: se asigna automáticamente a sí mismo
-    """
+def crear_cliente(cliente_data: ClienteCreate,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
 
     # Verificar RUT duplicado en la empresa
@@ -101,18 +82,9 @@ def crear_cliente(
     )
 
 
+# Actualiza datos de un cliente.
 @router.put("/{cliente_id}", response_model=ClienteResponse)
-def actualizar_cliente(
-    cliente_id: int,
-    cliente_data: ClienteUpdate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Actualiza datos de un cliente.
-    - Admin: cualquier cliente de su empresa
-    - Contador: solo sus clientes asignados
-    """
+def actualizar_cliente(cliente_id: int,cliente_data: ClienteUpdate,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
     cliente = repo.find_by_id(cliente_id)
 
@@ -132,17 +104,9 @@ def actualizar_cliente(
     return actualizado
 
 
+# Desactiva un cliente.
 @router.put("/{cliente_id}/desactivar", status_code=status.HTTP_200_OK)
-def desactivar_cliente(
-    cliente_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Desactiva un cliente (soft delete).
-    - Admin: cualquier cliente de su empresa
-    - Contador: solo sus clientes asignados
-    """
+def desactivar_cliente(cliente_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
     cliente = repo.find_by_id(cliente_id)
 
@@ -169,16 +133,7 @@ def desactivar_cliente(
 
 # Reasignar cliente.
 @router.put("/{cliente_id}/reasignar", response_model=ClienteResponse)
-def reasignar_cliente(
-    cliente_id: int,
-    nuevo_usuario_id: int,  # Query param: /api/clientes/5/reasignar?nuevo_usuario_id=3
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([RolUsuario.ADMIN, RolUsuario.SUPER]))
-):
-    """
-    Reasigna un cliente a otro contador de la misma empresa.
-    Solo admins pueden reasignar.
-    """
+def reasignar_cliente(cliente_id: int,nuevo_usuario_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(require_role([RolUsuario.ADMIN, RolUsuario.SUPER]))):
     repo = ClienteRepository(db)
     cliente = repo.find_by_id(cliente_id)
 
@@ -189,22 +144,12 @@ def reasignar_cliente(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
 
     # Verificar que el nuevo usuario existe, pertenece a la empresa y es contador.
-    nuevo_usuario = db.query(Usuario).filter(
-        Usuario.id == nuevo_usuario_id,
-        Usuario.empresa_id == current_user.empresa_id,
-        Usuario.activo == True
-    ).first()
+    nuevo_usuario = db.query(Usuario).filter(Usuario.id == nuevo_usuario_id,Usuario.empresa_id == current_user.empresa_id,Usuario.activo == True).first()
 
     if not nuevo_usuario:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El usuario destino no existe o no pertenece a esta empresa"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="El usuario destino no existe o no pertenece a esta empresa")
 
     if nuevo_usuario.rol != RolUsuario.CONTADOR:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Solo se puede reasignar a un usuario con rol contador"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Solo se puede reasignar a un usuario con rol contador")
 
     return repo.reasignar(cliente_id, nuevo_usuario_id)

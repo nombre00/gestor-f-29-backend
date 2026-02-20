@@ -1,22 +1,19 @@
 # Punto de entrada del código.
 
 # Recordatorios.
-# Version 1:
-# Models: clases que se mapean a la base de datos.
-# Repositories: accesadores.
-# Services: lógica de negocios.
-# Controller: endpoints.
-# Domain/Entities: clases de java típicas.
-# Schemas: clases de input y output de la api, valida datos, protege datos internos, genera documentación (por lo que entiendo).
+# Api: endpoints, incluye las carpetas schemas y la carpeta routers (controllers).
+    # Schemas: clases de input y output de la api, valida datos, protege datos internos, genera documentación (por lo que entiendo).
+    # routers: rutas REST, lo que conecta con el front.
+# application: lógica de negocio, incluye la carpeta services (orquestación, se llama funciones de otras partes).
+# core: necesidades comunes, incluye los archivos database, security y settings.
+    # database: es la conección con la base de datos en mySQL.
+    # security: incluye la gestion del token de validación del usuario.
+    # settings: constantes que ocupan otros módulos, importa datos del archivo .env.
+# Domain/entities: modelos del negocio, clases tipicas de java.
+# Infrastructure: incluye adaptadores (parsers y writers) y presistencia: models (modelos de las tablas) y repository (accesadores)
+
 
 # Flujo típico de trabajo: Flujo típico: Frontend envía schema → Controller valida → Service usa domain para lógica → Repository mapea a model y guarda → Retorna schema.
-
-
-# Version 2:
-# Api: endpoints, incluye las carpetas schemas y la carpeta routers (controllers).
-# application: lógica de negocio, incluye la carpeta services (orquestación, se llama funciones de otras partes).
-# Domain/entities: modelos del negocio, clases tipicas de java.
-# Infrastructure: incluye adaptadores (parsers y writers) y presistencia: archivo conección y carpetas: models y repository
 
 
 
@@ -24,16 +21,15 @@
     # pip install bcrypt==4.2.1 
     # pip install pydantic[email]
     # pip install resend
+    # pip install bs4
 
 
 
-# gestorf29-backend/src/f29_backend
-
+# gestorf29-backend/src/f29_backend    - para cuando necesites copiar y pegar
+# Comandos útiles.
 # Para moverme a la carptea raiz:     $env:PYTHONPATH="src" 
-
 # Con este comando le decimos al backend en que puerto correr.
 # Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 8000
-
 # Para crear el entorno virtual:            python -m venv .venv
 # Para correr el entorno virtual:           .\.venv\Scripts\Activate.ps1
 
@@ -66,9 +62,19 @@ app = FastAPI(
 )
 
 # CORS
+# Medida de seguridad, restringe acceso a fuentes que no sean del mismo dominio que la aplicación.
+# Lista de orígenes permitidos si el despliegue es on premise y localhost (lista en desarrollo).
+origins = [
+    "http://localhost:3000",       # React create-react-app típico
+    "http://localhost:5173",       # Vite (el más común hoy en día)
+    "http://127.0.0.1:3000",       # a veces el navegador usa 127.0.0.1 en vez de localhost
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",       # por si usas otro puerto en algún momento
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción: dominios específicos
+    # allow_origins=origins,  # En producción
+    allow_origins=["*"],      # En desarrollo.
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -2,6 +2,7 @@
 import io
 import re
 import pandas as pd
+from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from typing import Dict, List
 from io import BytesIO
@@ -27,7 +28,6 @@ def parse_registro_honorarios(bytes_content: bytes) -> RegistroHonorariosMensual
     if df is None:
         # Fallback: BeautifulSoup desde bytes
         try:
-            from bs4 import BeautifulSoup
             soup = BeautifulSoup(bytes_content.decode('latin-1', errors='replace'), 'html.parser')
             table = soup.find('table')
             if table:
