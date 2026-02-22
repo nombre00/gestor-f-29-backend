@@ -6,12 +6,7 @@ from f29_backend.core.database import get_db
 from f29_backend.core.security import get_current_user, require_role, hash_password
 from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUsuario
 from f29_backend.infrastructure.persistence.models.Invitacion import Invitacion
-from f29_backend.api.schemas.invitacionSchema import (
-    InvitacionCreate,
-    InvitacionResponse,
-    InvitacionListResponse,
-    CompletarRegistro
-)
+from f29_backend.api.schemas.invitacionSchema import InvitacionCreate,InvitacionResponse,InvitacionListResponse,CompletarRegistro
 from f29_backend.application.services.emailService import enviar_email_invitacion
 from datetime import datetime
 

@@ -33,6 +33,26 @@ def obtener_perfil_actual(current_user: Usuario = Depends(get_current_user)):
     return current_user  # Retornamos el usuario.
 
 
+# El usuario cambia su contraseña.
+@router.put("/me/password", status_code=status.HTTP_200_OK)
+def cambiar_password(password_data: CambiarPasswordRequest, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    # 1. Primero nos conectamos a la base de datos.
+    repo = ur(db)
+    # Verificar contraseña actual
+    if not verify_password(password_data.password_actual, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Contraseña actual incorrecta")
+    # Validar nueva contraseña
+    if len(password_data.password_nueva) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="La contraseña debe tener al menos 8 caracteres")
+    if password_data.password_nueva == password_data.password_actual:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="La nueva contraseña debe ser diferente a la actual")
+    # Hashamos la nueva contraseña.
+    new_hash = hash_password(password_data.password_nueva)
+    # Actualizar contraseña
+    repo.update_password(current_user.id, new_hash)
+    return {"message": "Contraseña actualizada exitosamente"}
+
+
 # Busca por id sujeto a permisos.
 @router.get("/{usuario_id}", response_model=UsuarioResponse)  # Schema de respuesta del usuario.
 def obtener_usuario_por_id(usuario_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
@@ -130,26 +150,6 @@ def reactivar_usuario(usuario_id: int, db: Session = Depends(get_db), current_us
             return {"message": "Usuario activado exitosamente"}
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se ha encontrado al usuario.")
-
-
-# El usuario cambia su contraseña.
-@router.put("/me/password", status_code=status.HTTP_200_OK)
-def cambiar_password(password_data: CambiarPasswordRequest, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    # 1. Primero nos conectamos a la base de datos.
-    repo = ur(db)
-    # Verificar contraseña actual
-    if not verify_password(password_data.password_actual, current_user.password_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Contraseña actual incorrecta")
-    # Validar nueva contraseña
-    if len(password_data.password_nueva) < 8:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="La contraseña debe tener al menos 8 caracteres")
-    if password_data.password_nueva == password_data.password_actual:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="La nueva contraseña debe ser diferente a la actual")
-    # Hashamos la nueva contraseña.
-    new_hash = hash_password(password_data.password_nueva)
-    # Actualizar contraseña
-    repo.update_password(current_user.id, new_hash)
-    return {"message": "Contraseña actualizada exitosamente"}
 
 
 # Elimina permanentemente al usuario, solo yo tengo acceso.
