@@ -17,7 +17,7 @@ class Cliente(Base):
         Integer,
         ForeignKey('empresa.id', ondelete='CASCADE'),  # Primer argumento: tabla de la llave, segundo argumento: que hace cuando lo borran.
         nullable=False,
-        index=True  # genera un índice.
+        index=True  # genera un índice. 
     )
     asignado_a_usuario_id = Column(
         Integer,
@@ -65,7 +65,7 @@ class Cliente(Base):
         foreign_keys=[asignado_a_usuario_id]
     )
     
-    # Constraint: RUT único por empresa.
+    # Constraint: RUT único por empresa. 
     __table_args__ = (
         # UniqueConstraint: obliga que los valores de las columnas ingresadas como parámetros no puedan repetirse, en este caso una empresa no puede tener 2 clientes con el mismo rut.
         UniqueConstraint('empresa_id', 'rut', name='unique_rut_empresa'),

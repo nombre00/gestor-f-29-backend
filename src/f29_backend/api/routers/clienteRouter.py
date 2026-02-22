@@ -19,37 +19,37 @@ router = APIRouter(prefix="/api/clientes", tags=["clientes"])
 # Lista clientes, sensible al rol de quien consulta.
 @router.get("", response_model=ClienteListResponse)
 def listar_clientes(db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
+    # asignamos la conección.
     repo = ClienteRepository(db)
-
-    if current_user.rol in [RolUsuario.ADMIN, RolUsuario.SUPER]:
-        clientes = repo.find_by_empresa(current_user.empresa_id)
-    else:
-        clientes = repo.find_by_usuario(current_user.id)
-
-    return {"clientes": clientes, "total": len(clientes)}
+    # Buscamos acorde al rol.
+    if current_user.rol == RolUsuario.SUPER  or  current_user.rol == RolUsuario.ADMIN:  # Si es SUPER o ADMIN:
+        clientes = repo.find_by_empresa(current_user.empresa_id)  # Buscamos todos los clientes de la empresa.
+    elif current_user.rol == RolUsuario.CONTADOR:  # Si es CONTADOR:
+        clientes = repo.find_by_usuario(current_user.id)  # Buscamos clientes asociados a ese contador.
+    # Revisamos que encontramos.
+    if not clientes:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se encontraron clientes.")
+    return {"clientes": clientes, "total": len(clientes)}  # Si todo sale bien retornamos los clientes.
 
 
 # Busca un cliente por id, sensible al rol de quien consulta.
 @router.get("/{cliente_id}", response_model=ClienteResponse)
 def obtener_cliente(cliente_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
     repo = ClienteRepository(db)
-    cliente = repo.find_by_id(cliente_id)
-
+    # Buscamos acorde al rol.
+    if current_user.rol == RolUsuario.SUPER:
+        cliente = repo.find_by_id(cliente_id)
+    elif current_user.rol == RolUsuario.ADMIN:
+        cliente = repo.find_by_id_y_empresa(cliente_id, current_user.empresa_id)  # Puede buscar cualquier cliente de la empresa.
+    elif current_user.rol == RolUsuario.CONTADOR:
+        cliente = repo.find_by_id_y_usuario(cliente_id, current_user.id)  # Puede buscar clientes asociados a su cuenta.
+    # Revisamos la respuesta.
     if not cliente:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
-
-    # Verificar que el cliente pertenece a la empresa del usuario
-    if cliente.empresa_id != current_user.empresa_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
-    # Contador solo puede ver sus propios clientes
-    if current_user.rol == RolUsuario.CONTADOR:
-        if cliente.asignado_a_usuario_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se encontró el cliente.")
     return cliente
 
 
+#### Falta revisarlo y compararlo con la GI.
 # Crea un nuevo cliente, sensible al rol de quien realiza la operación.
 @router.post("", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
 def crear_cliente(cliente_data: ClienteCreate,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
@@ -85,49 +85,68 @@ def crear_cliente(cliente_data: ClienteCreate,db: Session = Depends(get_db),curr
 # Actualiza datos de un cliente.
 @router.put("/{cliente_id}", response_model=ClienteResponse)
 def actualizar_cliente(cliente_id: int,cliente_data: ClienteUpdate,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
+    # Primero nos conectamos a la base de datos.
     repo = ClienteRepository(db)
-    cliente = repo.find_by_id(cliente_id)
-
+    if current_user.rol == RolUsuario.SUPER:  # SUPER: sin restricciones
+        cliente = repo.find_by_id(cliente_id)
+    elif current_user.rol == RolUsuario.ADMIN: # Si es admin buscamos por id de la empresa de quien consulta y id del usuario_data.
+        cliente = repo.find_by_id_y_empresa(cliente_id, current_user.empresa_id)
+    elif current_user.rol == RolUsuario.CONTADOR:  # Si es contador buscamos por id y id del contador.
+        cliente = repo.find_by_id_y_usuario(cliente_id, current_user.id)
+    # Revisamos que encontramos lo que buscamos.
     if not cliente:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
-
-    if cliente.empresa_id != current_user.empresa_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
-    if current_user.rol == RolUsuario.CONTADOR:
-        if cliente.asignado_a_usuario_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se encontró el cliente.")
+    # Revisamos que el mail ingresado no se encuentre asociado a otro cliente.
+    if cliente_data.contacto_email:
+        if  repo.revisar_mail(cliente.id, cliente_data.contacto_email):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este email ya está en uso por otro cliente")
+    # Preparamos los datos.
     campos = {k: v for k, v in cliente_data.model_dump().items() if v is not None}
-    actualizado = repo.update(cliente_id, **campos)
+    actualizado = repo.update(cliente.id, **campos)  # Ejecutamos el actualizar.
 
     return actualizado
 
 
 # Desactiva un cliente.
 @router.put("/{cliente_id}/desactivar", status_code=status.HTTP_200_OK)
-def desactivar_cliente(cliente_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(get_current_user)):
+def desactivar_cliente(cliente_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))):
+    # 1. Primero nos conectamos a la base de datos.
     repo = ClienteRepository(db)
-    cliente = repo.find_by_id(cliente_id)
-
-    if not cliente:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
-
-    if cliente.empresa_id != current_user.empresa_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
-    if current_user.rol == RolUsuario.CONTADOR:
-        if cliente.asignado_a_usuario_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
-
+    # Buscamos acorde a permisos.
+    if current_user.rol == RolUsuario.SUPER:  # SUPER: sin restricciones
+        cliente = repo.find_by_id(cliente_id)
+    elif current_user.rol == RolUsuario.ADMIN: # Si es admin buscamos por id de la empresa de quien consulta y id del usuario_data.
+        cliente = repo.find_by_id_y_empresa(cliente_id, current_user.empresa_id)
+    # Revisamos que encontramos el cliente.
+    if not cliente: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se encontró el cliente.")
+    # Revisamos que el cliente esté activo.
     if not cliente.activo:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El cliente ya está inactivo"
-        )
-
-    repo.delete(cliente_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="El cliente no se encuentra activo.")
+    # Desactivamos al cliente.
+    repo.deactivate(cliente_id)
     return {"message": "Cliente desactivado exitosamente"}
+
+
+# Reactiva un cliente.
+@router.put("/{cliente_id}/reactivar", status_code=status.HTTP_200_OK)
+def reactivar_cliente(cliente_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))):
+    # 1. Primero nos conectamos a la base de datos.
+    repo = ClienteRepository(db)
+    # Buscamos acorde a permisos.
+    if current_user.rol == RolUsuario.SUPER:  # SUPER: sin restricciones
+        cliente = repo.find_by_id(cliente_id)
+    elif current_user.rol == RolUsuario.ADMIN: # Si es admin buscamos por id de la empresa de quien consulta y id del usuario_data.
+        cliente = repo.find_by_id_y_empresa(cliente_id, current_user.empresa_id)
+    # Revisamos que encontramos el cliente.
+    if not cliente: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No se encontró el cliente.")
+    # Revisamos que el cliente esté activo.
+    if cliente.activo:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="El cliente ya se encuentra activo.")
+    # Desactivamos al cliente.
+    repo.activate(cliente_id)
+    return {"message": "Cliente reactivado exitosamente"}
 
 
 

@@ -8,13 +8,14 @@ from typing import List, Optional
 from f29_backend.infrastructure.persistence.models import Empresa
 
 class EmpresaRepository:
+    # Constructor que genera la conección.
     def __init__(self, db: Session):
         self.db = db
     
+    # Crear una empresa.
     def create(self, rut: str, razon_social: str, 
                nombre_comercial: str = None, email: str = None,
                telefono: str = None) -> Empresa:
-        """Crea una nueva empresa"""
         empresa = Empresa(
             rut=rut,
             razon_social=razon_social,
@@ -28,24 +29,30 @@ class EmpresaRepository:
         self.db.refresh(empresa)
         return empresa
     
+
+    # Búsquedas unitarias.
+    # Buscar por id.
     def find_by_id(self, empresa_id: int) -> Optional[Empresa]:
-        """Busca empresa por ID"""
         return self.db.query(Empresa).filter(Empresa.id == empresa_id).first()
     
+    # Buscar por rut.
     def find_by_rut(self, rut: str) -> Optional[Empresa]:
-        """Busca empresa por RUT"""
         return self.db.query(Empresa).filter(Empresa.rut == rut).first()
     
+
+    # Listar.
+    # Lista todas las empresas.
     def find_all(self, skip: int = 0, limit: int = 100, 
                  solo_activas: bool = True) -> List[Empresa]:
-        """Lista empresas con paginación"""
         query = self.db.query(Empresa)
         if solo_activas:
             query = query.filter(Empresa.activa == True)
         return query.offset(skip).limit(limit).all()
     
+
+    # Actualizaciones.
+    # Actualizar.
     def update(self, empresa_id: int, **kwargs) -> Optional[Empresa]:
-        """Actualiza una empresa"""
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return None
@@ -58,8 +65,8 @@ class EmpresaRepository:
         self.db.refresh(empresa)
         return empresa
     
+    # Desactivar.
     def delete(self, empresa_id: int) -> bool:
-        """Soft delete de empresa"""
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return False
@@ -68,8 +75,9 @@ class EmpresaRepository:
         self.db.commit()
         return True
     
+
+    # Borrar.
     def delete_permanently(self, empresa_id: int) -> bool:
-        """Eliminación permanente"""
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return False
