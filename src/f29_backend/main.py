@@ -21,7 +21,8 @@
     # pip install bcrypt==4.2.1 
     # pip install pydantic[email]
     # pip install resend
-    # pip install bs4
+    # pip install bs4 
+    # pip install lxml
 
 
 

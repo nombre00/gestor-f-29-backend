@@ -18,7 +18,12 @@ from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUs
 
 
 # Contexto de hashing de contraseñas (bcrypt).
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Elimina un bug al encriptar con la ultima version de bcrypt.
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False   # evita que bcrypt lance error en passwords >72
+)
 
 # Configuración para JWT
 ALGORITHM = "HS256"   # Algoritmo de hasheo más usado.

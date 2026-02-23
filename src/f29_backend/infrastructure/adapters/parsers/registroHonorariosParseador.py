@@ -1,5 +1,6 @@
 
 import io
+import os
 import re
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -7,6 +8,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 from io import BytesIO
 from openpyxl import Workbook, load_workbook
+import tempfile
 # Importación módulos.
 from f29_backend.domain.entities.honorarios import RegistroHonorariosMensual
 
@@ -24,6 +26,18 @@ def parse_registro_honorarios(bytes_content: bytes) -> RegistroHonorariosMensual
             df = dfs[0]
     except Exception as e:
         print(f"pd.read_html falló: {e}")
+    """ try:
+        with tempfile.NamedTemporaryFile(suffix='.xls', delete=False) as tmp:
+            tmp.write(bytes_content)
+            tmp_path = tmp.name
+        
+        dfs = pd.read_html(tmp_path, encoding='iso-8859-1')
+        if dfs:
+            df = dfs[0]
+    except Exception as e:
+        print(f"pd.read_html falló: {e}")
+    finally:
+        os.unlink(tmp_path)  # limpiar el archivo temporal """
 
     if df is None:
         # Fallback: BeautifulSoup desde bytes
@@ -35,7 +49,7 @@ def parse_registro_honorarios(bytes_content: bytes) -> RegistroHonorariosMensual
                 data = [[cell.get_text(strip=True) for cell in row.find_all(['td', 'th'])] for row in rows]
                 df = pd.DataFrame(data[1:], columns=data[0] if data else None)
         except Exception as e:
-            raise ValueError(f"No se pudo parsear como HTML: {e}")
+            raise ValueError(f"No se pudo parsear como HTML: {e} | Filas encontradas: {len(data) if 'data' in locals() else 'N/A'} | Columnas header: {len(data[0]) if 'data' in locals() and data else 'N/A'}")
 
     if df is None or df.empty:
         raise ValueError("No se encontró tabla válida")

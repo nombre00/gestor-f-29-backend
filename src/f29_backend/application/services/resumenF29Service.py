@@ -4,7 +4,10 @@ import os
 import io
 import logging
 from typing import Dict
+from decimal import Decimal
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from dataclasses import asdict
 # Clases de los imputs.
 from f29_backend.domain.entities.resumenVentas import ResumenVentas
 from f29_backend.domain.entities.resumenCompras import ResumenCompras
@@ -21,6 +24,9 @@ from f29_backend.infrastructure.adapters.parsers.registroHonorariosParseador imp
 from f29_backend.infrastructure.adapters.writers.resumenGenerador import resumenGenerador2
 from f29_backend.infrastructure.adapters.writers.resumenPlantilla import generar_plantilla_resumen_f292
 from f29_backend.infrastructure.adapters.writers.resumenF29Escritor import resumenF29Escritor2
+# Persistencia.
+from f29_backend.infrastructure.persistence.models.resumenF29Modelo import ResumenF29 as ResumenModel, EstadoF29
+from f29_backend.infrastructure.persistence.models.cliente import Cliente
 
 
 
@@ -65,8 +71,8 @@ def controladorResumenF29_v4(
     # LLenamos la plantilla del resumen con los datos del resumen.
     resumenF29Escritor2(resumen, plantillaResumen)
 
+
     # Guardamos en carpeta de salidas. 
-    # Verificamos.
     # ── Decidir dónde y con qué nombre guardar ───────────────────────────────
     if ruta and ruta.strip():  # si se pasó una ruta válida y no está vacía
         ruta_salida = ruta
@@ -130,6 +136,7 @@ def controladorResumenF29_v5(
     return resumen
 
 
+
 # Se usa en la vista resumenF29. 
 # Recibe un resumen y exporta un excel.
 def exportarAExcel(resumen: ResumenF29, ruta: str):
@@ -146,7 +153,7 @@ def exportarAExcel(resumen: ResumenF29, ruta: str):
 
 
 
-# Funciones que gestionan inputs en bytes.
+# Funciones que gestionan inputs en bytes (esto es para recibir los datos del front).
 logger = logging.getLogger(__name__)
 def procesar_f29_y_obtener_resumen(
     ventas_bytes: bytes,
@@ -157,21 +164,21 @@ def procesar_f29_y_obtener_resumen(
     importaciones: dict
 ) -> ResumenF29:
     try:
-        # ── Parseo de ventas ───────────────────────────────────────────────────────
+        # Parseo de ventas
         df_ventas = parse_detalle_ventas(ventas_bytes)
         rv = parse_df_to_resumen_ventas(df_ventas)
 
-        # ── Parseo de compras ──────────────────────────────────────────────────────
+        # Parseo de compras
         df_compras = parse_detalle_compras(compras_bytes)  # ← corregido
         rc = parse_df_to_resumen_compras(df_compras)
 
-        # ── Parseo de remuneraciones ───────────────────────────────────────────────
+        # Parseo de remuneraciones
         lr = parse_libro_remuneraciones(remuneraciones_bytes)
 
-        # ── Parseo de honorarios ───────────────────────────────────────────────────
+        # Parseo de honorarios
         rh = parse_registro_honorarios(honorarios_bytes)
 
-        # ── Generación del resumen ─────────────────────────────────────────────────
+        # Generación del resumen
         resumen: ResumenF29 = resumenGenerador2(
             rv, rc, lr, rh, remanente, importaciones
         )
@@ -202,3 +209,106 @@ def generar_excel_en_memoria(resumen: ResumenF29) -> bytes:
             status_code=500,
             detail=f"Error al generar Excel en memoria: {str(e)}"
         )
+    
+
+
+
+
+###### Persistencia ######
+def guardar_resumen_f29(
+    db: Session,
+    entity: ResumenF29,
+    cliente_id: int,
+    creado_por_id: int,
+    periodo: str,          # 'YYYY-MM'
+    force_update: bool = True
+) -> ResumenModel:
+    """
+    Guarda o actualiza un ResumenF29 en BD.
+    - Si existe borrador para cliente+periodo → actualiza.
+    - Si no existe → crea nuevo.
+    - Valida permisos básicos (cliente pertenece a empresa del usuario).
+    - Retorna el modelo guardado con id.
+    """
+    # Funciones auxiliares
+    def _serializable(obj):
+        """Convierte tipos no serializables a tipos nativos de Python."""
+        if isinstance(obj, Decimal):
+            return int(obj)
+        raise TypeError(f"Tipo no serializable: {type(obj)}")
+
+    def _limpiar_dict(d):
+        """Recursivamente convierte Decimals en un dict/list."""
+        if isinstance(d, dict):
+            return {k: _limpiar_dict(v) for k, v in d.items()}
+        elif isinstance(d, list):
+            return [_limpiar_dict(i) for i in d]
+        elif isinstance(d, Decimal):
+            return int(d)
+        return d
+    
+
+    # 1. Validar que el cliente exista y sea accesible
+    cliente = db.query(Cliente).filter(
+        Cliente.id == cliente_id,
+        Cliente.activo == True
+    ).first()
+
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado o inactivo")
+
+    # validar que el cliente pertenezca a la empresa del usuario
+    # if cliente.empresa_id != current_user.empresa_id:
+    #    raise HTTPException(403, "Cliente no pertenece a tu empresa")
+
+    # 2. Buscar si ya existe un borrador para este cliente + periodo
+    existente = db.query(ResumenModel).filter(
+        ResumenModel.cliente_id == cliente_id,
+        ResumenModel.periodo == periodo,
+        ResumenModel.estado == EstadoF29.BORRADOR
+    ).first()
+
+    if existente:
+        if not force_update:
+            raise HTTPException(
+                status_code=409,  # Conflict
+                detail=f"Ya existe un borrador para este cliente y período (ID {existente.id})."
+            )
+        model = existente
+    else:
+        model = ResumenModel()
+
+    # 3. Llenar campos
+    model.cliente_id = cliente_id
+    model.periodo = periodo
+    model.creado_por_usuario_id = creado_por_id
+    model.estado = EstadoF29.BORRADOR  # Siempre borrador al guardar automáticamente
+
+    # Totales clave (ajusta nombres si difieren)
+    model.debito_fiscal = entity.ventas_total.get('iva', 0)
+    model.credito_fiscal = entity.compras_total.get('iva_rec', 0)
+    model.remanente_mes_anterior = entity.remanenteMesAnterior
+    model.iva_a_pagar = entity.IVAPP
+    model.remanente = entity.remanente
+    model.total_ventas_netas = entity.ventas_total.get('neto', 0)
+    model.total_compras_netas = entity.compras_total.get('neto', 0)
+    model.total_iva_ventas = entity.ventas_total.get('iva', 0)
+    model.total_iva_compras = entity.compras_total.get('iva_rec', 0)
+    model.total_retenciones = (
+        entity.remuneraciones.get('impt_unico', 0) +
+        entity.honorarios.get('retencion', 0) +
+        entity.remuneraciones.get('rem_3porc', 0) +
+        entity.honorarios.get('cod155', 0)
+    )
+    model.ppm = entity.ppm.get('ppm', 0) + entity.ppm.get('PPM2_valor', 0) + entity.ppm.get('PPM_transportista_valor', 0)
+    model.total_a_pagar = entity.TT
+
+    # Guardar TODO como JSON
+    # model.detalles_json = asdict(entity)
+    model.detalles_json = _limpiar_dict(asdict(entity))  # cambiamos Decimal a int para serializar.
+
+    db.add(model)
+    db.commit()
+    db.refresh(model)
+
+    return model
