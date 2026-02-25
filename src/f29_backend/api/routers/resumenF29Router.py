@@ -10,7 +10,8 @@ from f29_backend.infrastructure.persistence.repository.clienteRepository import 
 from f29_backend.infrastructure.persistence.repository.resumenF29Repository import ResumenF29Repository
 from f29_backend.api.schemas.resumenF29Schema import (
     ResumenF29Create, ResumenF29Update, ResumenF29Response,
-    ResumenF29ListItem, CambiarEstadoRequest, DashboardResumenResponse
+    ResumenF29ListItem, CambiarEstadoRequest, DashboardResumenResponse,
+    ResumenF29DetalleResponse
 )
 
 router = APIRouter(prefix="/api/resumenes", tags=["resumenes-f29"])
@@ -49,7 +50,6 @@ def obtener_datos_dashboard(
     resumenes = repo.find_by_usuario_y_mes(current_user.id, anio, mes)
     pendientes = repo.find_clientes_sin_resumen_en_mes(current_user.id, anio, mes)
 
-    # Mapear resúmenes al schema de lista (desnormalizar cliente)
     resumenes_items = [
         ResumenF29ListItem(
             id=r.id,
@@ -103,6 +103,29 @@ def listar_resumenes_cliente(
     ]
 
 
+@router.get("/{resumen_id}", response_model=ResumenF29DetalleResponse)
+def obtener_resumen_por_id(
+    resumen_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Devuelve un resumen F29 completo por ID, incluyendo detalles_json.
+    Usado por VistaResumenF29 cuando se navega desde el dashboard.
+    """
+    repo = ResumenF29Repository(db)
+    resumen = repo.find_by_id(resumen_id)
+
+    if not resumen:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resumen no encontrado")
+
+    cliente_repo = ClienteRepository(db)
+    cliente = cliente_repo.find_by_id(resumen.cliente_id)
+    _verificar_acceso_cliente(cliente, current_user)
+
+    return resumen
+
+
 @router.post("", response_model=ResumenF29Response, status_code=status.HTTP_201_CREATED)
 def crear_resumen(
     resumen_data: ResumenF29Create,
@@ -116,7 +139,6 @@ def crear_resumen(
 
     repo = ResumenF29Repository(db)
 
-    # Verificar que no exista ya un resumen para ese período
     existente = repo.find_by_cliente_periodo(resumen_data.cliente_id, resumen_data.periodo)
     if existente:
         raise HTTPException(
