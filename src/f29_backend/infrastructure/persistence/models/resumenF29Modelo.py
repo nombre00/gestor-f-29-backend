@@ -1,4 +1,4 @@
-# modelos de la tabla en labase de datos del resumenf29
+# modelos de la tabla en la base de datos del resumenf29
 
 
 # Bibliotecas.
@@ -106,7 +106,7 @@ class ResumenF29(Base):
 
 
 
-
+# Versión anterior, deprecada.
 """ # Modelo de mapeo para tablas SQL.
 
 

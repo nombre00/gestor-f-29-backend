@@ -17,14 +17,28 @@ def resumenF29Escritor2(resumen: ResumenF29, plantilla: openpyxl.Workbook) -> op
 
     # Función helper para poner valor + borde + estilo
     # parámetros: r = fila; c = columna; font = fuente de la letra; alineacion; aplica el borde definido arriba.
-    def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, align=right):
+    """ def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, align=right):
         col_letter = openpyxl.utils.get_column_letter(c)  # .get_column_letter() convierte el numero de la columna a letra.
         ref = f"{col_letter}{r}"
         ws[ref] = value
         cell_obj = ws[ref]
         cell_obj.font = Font(name=font_name, size=font_size, bold=bold)
         if align:
+            cell_obj.alignment = align """
+    # Version que formatéa el número.
+    def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, 
+         align=right, number_format=None):
+        col_letter = openpyxl.utils.get_column_letter(c)
+        ref = f"{col_letter}{r}"
+        ws[ref] = value
+        cell_obj = ws[ref]
+        cell_obj.font = Font(name=font_name, size=font_size, bold=bold)
+        if align:
             cell_obj.alignment = align
+        if number_format is not None and isinstance(value, (int, float)):  # formateamos.
+            cell_obj.number_format = number_format
+        elif isinstance(value, (int, float)):  # default para montos
+            cell_obj.number_format = '#,##0'      # entero → 1.234.567
     
 
 
@@ -314,8 +328,13 @@ def resumenF29Escritor2(resumen: ResumenF29, plantilla: openpyxl.Workbook) -> op
     cell(46, 9, tt, align=right)  # Ingresamos el texto.
 
 
-    # Terminamos con confeccionado.
-    # Linea 47.
+    # Terminamos con los datos extra.
+    # Linea 49.
+    arriendos_pagados = resumen.arriendos_pagados
+    cell(49, 5, arriendos_pagados, align=right)
+    # Linea 50.
+    gastos_generales_boletas = resumen.gastos_generales_boletas
+    cell(50, 5, gastos_generales_boletas, align=right)
 
 
     # Imprimimos en pantalla la plantilla.

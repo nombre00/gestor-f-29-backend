@@ -21,7 +21,7 @@ from f29_backend.infrastructure.adapters.parsers.comprasDetalleParseador import 
 from f29_backend.infrastructure.adapters.parsers.libroRemuneracionesParseador import parse_libro_remuneraciones
 from f29_backend.infrastructure.adapters.parsers.registroHonorariosParseador import parse_registro_honorarios
 # Escritores.
-from f29_backend.infrastructure.adapters.writers.resumenGenerador import resumenGenerador2
+from f29_backend.infrastructure.adapters.writers.resumenGenerador import resumenGenerador3
 from f29_backend.infrastructure.adapters.writers.resumenPlantilla import generar_plantilla_resumen_f292
 from f29_backend.infrastructure.adapters.writers.resumenF29Escritor import resumenF29Escritor2
 # Persistencia.
@@ -63,7 +63,7 @@ def controladorResumenF29_v4(
 
 
     # Generamos un resumen y lo llenamos con datos.
-    resumen: ResumenF29 = resumenGenerador2(rv, rc, lr, rh, remanente, importaciones)
+    resumen: ResumenF29 = resumenGenerador3(rv, rc, lr, rh, remanente, importaciones)
 
     # Creamos una plantilla de resumenf29.
     plantillaResumen = generar_plantilla_resumen_f292()
@@ -130,7 +130,7 @@ def controladorResumenF29_v5(
 
 
     # Generamos un resumen y lo llenamos con datos.
-    resumen: ResumenF29 = resumenGenerador2(rv, rc, lr, rh, remanente, importaciones)
+    resumen: ResumenF29 = resumenGenerador3(rv, rc, lr, rh, remanente, importaciones)
 
     # Retornamos el objeto creado.
     return resumen
@@ -161,7 +161,8 @@ def procesar_f29_y_obtener_resumen(
     remuneraciones_bytes: bytes,
     honorarios_bytes: bytes,
     remanente: int,
-    importaciones: dict
+    arriendos_pagados: int,
+    gastos_generales_boletas: int
 ) -> ResumenF29:
     try:
         # Parseo de ventas
@@ -179,9 +180,13 @@ def procesar_f29_y_obtener_resumen(
         rh = parse_registro_honorarios(honorarios_bytes)
 
         # Generación del resumen
-        resumen: ResumenF29 = resumenGenerador2(
-            rv, rc, lr, rh, remanente, importaciones
+        resumen: ResumenF29 = resumenGenerador3(
+            rv, rc, lr, rh, remanente
         )
+
+        # Agregamos los datos extra.
+        resumen.arriendos_pagados = arriendos_pagados
+        resumen.gastos_generales_boletas = gastos_generales_boletas
 
         return resumen
 
@@ -215,6 +220,7 @@ def generar_excel_en_memoria(resumen: ResumenF29) -> bytes:
 
 
 ###### Persistencia ######
+# Guarda o actualiza un resumenf29.
 def guardar_resumen_f29(
     db: Session,
     entity: ResumenF29,
@@ -223,20 +229,7 @@ def guardar_resumen_f29(
     periodo: str,          # 'YYYY-MM'
     force_update: bool = True
 ) -> ResumenModel:
-    """
-    Guarda o actualiza un ResumenF29 en BD.
-    - Si existe borrador para cliente+periodo → actualiza.
-    - Si no existe → crea nuevo.
-    - Valida permisos básicos (cliente pertenece a empresa del usuario).
-    - Retorna el modelo guardado con id.
-    """
     # Funciones auxiliares
-    def _serializable(obj):
-        """Convierte tipos no serializables a tipos nativos de Python."""
-        if isinstance(obj, Decimal):
-            return int(obj)
-        raise TypeError(f"Tipo no serializable: {type(obj)}")
-
     def _limpiar_dict(d):
         """Recursivamente convierte Decimals en un dict/list."""
         if isinstance(d, dict):
@@ -256,10 +249,6 @@ def guardar_resumen_f29(
 
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado o inactivo")
-
-    # validar que el cliente pertenezca a la empresa del usuario
-    # if cliente.empresa_id != current_user.empresa_id:
-    #    raise HTTPException(403, "Cliente no pertenece a tu empresa")
 
     # 2. Buscar si ya existe un borrador para este cliente + periodo
     existente = db.query(ResumenModel).filter(

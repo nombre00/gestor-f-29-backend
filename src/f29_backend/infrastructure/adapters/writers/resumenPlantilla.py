@@ -27,7 +27,7 @@ def generar_plantilla_resumen_f292() -> openpyxl.Workbook:
 
     # Función helper para poner valor + borde + estilo
     # parámetros: r = fila; c = columna; font = fuente de la letra; alineacion; aplica el borde definido arriba.
-    def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, align=None):
+    """ def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, align=None):
         col_letter = openpyxl.utils.get_column_letter(c)  # .get_column_letter() convierte el numero de la columna a letra.
         ref = f"{col_letter}{r}"
         ws[ref] = value
@@ -35,7 +35,24 @@ def generar_plantilla_resumen_f292() -> openpyxl.Workbook:
         cell_obj.border = border
         cell_obj.font = Font(name=font_name, size=font_size, bold=bold)
         if align:
+            cell_obj.alignment = align """
+    # Version que formatea el numero.
+    def cell(r, c, value="", font_name="Arial", font_size=10, bold=False, align=right, number_format=None):
+        col_letter = openpyxl.utils.get_column_letter(c)
+        ref = f"{col_letter}{r}"
+        ws[ref] = value
+        cell_obj = ws[ref]
+        # Fuente y negrita
+        cell_obj.font = Font(name=font_name, size=font_size, bold=bold)
+        # Alineación
+        if align:
             cell_obj.alignment = align
+        # Formato numérico (lo que ya tenías)
+        if number_format is not None and isinstance(value, (int, float)):
+            cell_obj.number_format = number_format
+        elif isinstance(value, (int, float)):
+            cell_obj.number_format = '#,##0'  # default para montos enteros
+        cell_obj.border = border
 
 
     # Función para merge + aplicar borde a todo el rango
@@ -510,6 +527,27 @@ def generar_plantilla_resumen_f292() -> openpyxl.Workbook:
     cell(47, 3, "", align=left_wrap)  # Ingresamos el texto. ACÁ VA LA FECHA EN QUE SE HIZO ESTE DOCUMENTO.
     cell(47, 4, "A.V", align=center)  # Ingresamos el texto.
     merge(47, 4, 47, 6)  # Juntamos las celdas.
+
+    # -------------------------------------------------
+    # datos extra. lineas 48 a la 50.
+    # -------------------------------------------------
+
+    # Linea 48.
+    cell(48, 2, "Datos extra (ajenos al documento en cuestión).", align=left_wrap, bold=True, font_size=11)  # Ingresamos el texto.
+    merge(48, 2, 48, 6) # Juntamos las celdas.
+
+    # Linea 49.
+    cell(49, 2, "Arriendos pagados: ")  # Ingresamos el texto.
+    merge(49, 2, 49, 4) # Juntamos las celdas.
+    cell(49, 5, 0, align=left_wrap)  # Ingresamos el texto.
+    merge(49, 5, 49, 6) # Juntamos las celdas.
+
+    # Linea 50.
+    cell(50, 2, "Gastos generales boletas: ")  # Ingresamos el texto.
+    merge(50, 2, 50, 4) # Juntamos las celdas.
+    cell(50, 5, 0, align=left_wrap)  # Ingresamos el texto.
+    merge(50, 5, 50, 6) # Juntamos las celdas.
+
 
     # Ajustes de ancho para que se vean las casillas (el ajustar unas casillas parece esconder otras, ojo con eso).
     ws.column_dimensions['A'].width = 13

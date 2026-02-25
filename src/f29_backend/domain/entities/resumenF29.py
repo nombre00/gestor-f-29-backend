@@ -1,3 +1,5 @@
+# Clase dominio/entidad del modelo.
+
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
 from dataclasses import asdict
@@ -16,6 +18,9 @@ class ResumenF29:
     honorarios:      Dict          = field(default_factory=dict)
     ppm:             Dict          = field(default_factory=dict)
     TT:              int           = 0
+    # Datos extra (ajenos al documento).
+    arriendos_pagados: int         = 0
+    gastos_generales_boletas: int  = 0
 
     # Métodos.
     # Calcular total ventas.
@@ -30,16 +35,14 @@ class ResumenF29:
 
     # Método to_dict (para serializar en comunicaciones REST).
     def to_dict(self):
-        data = asdict(self)
-        for key, value in data.items():
-            if isinstance(value, (int, float)):
-                data[key] = int(value)  # o float si necesitas decimales
-            elif isinstance(value, list):
-                # Si las listas tienen sub-dicts que necesitan serialización
-                data[key] = [item.to_dict() if hasattr(item, 'to_dict') else item for item in value]
-            elif isinstance(value, dict):
-                # Si los dicts internos necesitan limpieza (opcional)
-                data[key] = {k: v for k, v in value.items()}
+        data = asdict(self)  # Guardamos los datos en una variable, queda como un diccionario ya que recibe un JSON.
+        for key, value in data.items():  # Por valor-llave dentro del diccionario.
+            if isinstance(value, (int, float)):  # Si es int o float:
+                data[key] = int(value)  # lo tratamos como int.
+            elif isinstance(value, list): # Si es una lista de diccionarios:
+                data[key] = [item.to_dict() if hasattr(item, 'to_dict') else item for item in value]  # Lo tratamos como lista de diccionarios.
+            elif isinstance(value, dict):  # Si es diccionario:
+                data[key] = {k: v for k, v in value.items()}  # Lo tratamos como diccionario.
         
         return data
     
@@ -60,4 +63,7 @@ class ResumenF29:
             honorarios=data.get('honorarios', {}),
             ppm=data.get('ppm', {}),
             TT=data.get('TT', 0),
+            # Datos nuevos.
+            arriendos_pagados=data.get('arriendos_pagados', 0),
+            gastos_generales_boletas=data.get('gastos_generales_boletas', 0),
         )

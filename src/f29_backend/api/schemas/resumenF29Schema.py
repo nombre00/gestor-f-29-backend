@@ -1,3 +1,5 @@
+# Schema de la clase resumen f29.
+
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
 from datetime import date, datetime
@@ -18,6 +20,9 @@ class ResumenF29Base(BaseModel):
     honorarios: Dict = Field(default_factory=dict)
     ppm: Dict = Field(default_factory=dict)
     TT: int = 0
+    # Datos nuevos.
+    arriendos_pagados: int = 0
+    gastos_generales_boletas: int  = 0
 
 
 class ResumenF29Create(ResumenF29Base):
@@ -45,6 +50,9 @@ class ResumenF29Update(BaseModel):
     total_iva_compras: Optional[Decimal] = None
     numero_folio: Optional[str] = None
     fecha_envio_sii: Optional[date] = None
+    # Datos nuevos (pendiente si corresponde)
+    arriendos_pagados: Optional[int] = None
+    gastos_generales_boletas: Optional[int] = None
 
 
 class CambiarEstadoRequest(BaseModel):
@@ -85,6 +93,9 @@ class ResumenF29Response(BaseModel):
     creado_por_usuario_id: int
     created_at: datetime
     updated_at: datetime
+    # Datos nuevos.
+    arriendos_pagados: int = 0
+    gastos_generales_boletas: int  = 0
 
     class Config:
         from_attributes = True
