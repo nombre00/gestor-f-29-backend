@@ -168,16 +168,16 @@ def parse_df_to_resumen_compras(df: pd.DataFrame) -> ResumenCompras:
             'total': int(filtro_df['Monto Total'].sum())
         }
     
-    # cod34: Compras internas exentas o no grabadas
+
+    # Ingreso de los datos.
+    # cod34: Compras internas exentas o no grabadas 
     exento_filter = df['Monto Exento'] > 0
     cod34 = crear_dict(34, 'Compras internas exentas o no grabadas', df[exento_filter])
-
-    # Supermercado: contiene 'supermercado', 'superm', 'comercio similar'. No tenemos un ejemplo en el ejemplo.
-    es_supermercado = df['Tipo Compra'].str.contains('supermercado|superm|comercio similar', na=False)
-    # Activo Fijo: contiene 'activo fijo' o 'activo' (para codPendiente2)
-    es_activo_fijo = df['Tipo Compra'].str.contains('activo fijo|activo', na=False)
+    
 
     # cod33: Facturas recibidas y facturas de compra (principal). SOLO las del giro (excluyendo supermercado/activo fijo)
+    # Supermercado: contiene 'supermercado', 'superm', 'comercio similar'. No tenemos un ejemplo en el ejemplo.
+    es_supermercado = df['Tipo Compra'].str.contains('supermercado|superm|comercio similar', na=False)
     filtro_cod33 = (df['Tipo Doc'] == '33') & (~es_supermercado) & (~es_activo_fijo)
     cod33 = crear_dict(33, 'Facturas recibidas y facturas de compra', df[filtro_cod33])
 
@@ -190,6 +190,8 @@ def parse_df_to_resumen_compras(df: pd.DataFrame) -> ResumenCompras:
     )
 
     # codActivoFijo: Facturas activo fijo.
+    # Activo Fijo: contiene 'activo fijo' o 'activo' (para codPendiente2)
+    es_activo_fijo = df['Tipo Compra'].str.contains('activo fijo|activo', na=False)
     filtro_activo = es_activo_fijo | ((df['Monto Neto Activo Fijo'] > 0) | (df['IVA Activo Fijo'] > 0))
     codActivoFijo = crear_dict(
         524,  # Tipo como 524 (cantidad docs activo fijo)

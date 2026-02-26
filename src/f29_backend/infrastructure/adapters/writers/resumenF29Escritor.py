@@ -1,5 +1,6 @@
+# Escritor que ingresa los datos a una plantilla.
 
-# Bibliotecas..
+# Bibliotecas.
 import os
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side

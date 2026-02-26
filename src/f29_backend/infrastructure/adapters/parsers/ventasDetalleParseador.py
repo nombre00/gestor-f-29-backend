@@ -41,7 +41,7 @@ def parse_detalle_ventas(bytes_content: bytes):
     df.columns = df.columns.str.strip()
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    # 6. Columnas numéricas importantes en ventas (ajusta según tu CSV)
+    # 6. Columnas numéricas importantes en ventas.
     numeric_cols = [
         'Nro', 'Tipo Doc', 'Folio',
         'Monto Exento', 'Monto Neto', 'Monto IVA', 'Monto total',
@@ -57,15 +57,15 @@ def parse_detalle_ventas(bytes_content: bytes):
         if col in df.columns:
             # 1. Reemplazar valores no numéricos por '0' (como string)
             df[col] = df[col].replace(['', '-', '--', 'N/A'], '0')
-            # 2. ¡Aquí está la clave! Forzamos todo a string ANTES de usar .str
+            # 2. Forzamos todo a string ANTES de usar .str
             df[col] = df[col].astype(str)
-            # 3. Ahora sí limpiamos el formato chileno sin miedo
+            # 3. Ahora limpiamos el formato chileno sin miedo
             df[col] = df[col].str.replace('.', '', regex=False)      # quita puntos de miles
             df[col] = df[col].str.replace(',', '.', regex=False)     # coma → punto decimal
             # 4. Finalmente convertimos a número
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
-    # 7. Fechas (las dejamos como string por ahora)
+    # 7. Fechas.
     date_cols = ['Fecha Docto', 'Fecha Recepcion', 'Fecha Acuse Recibo', 'Fecha Reclamo']
     for col in date_cols:
         if col in df.columns:
@@ -78,11 +78,8 @@ def parse_detalle_ventas(bytes_content: bytes):
     return df
 
 
-# Recibe un dataframe y retorna un objeto de la clase DetalleVentas (Por ahora no se usa).
+# Recibe un dataframe y retorna un objeto de la clase DetalleVentas.
 def parse_df_to_detalle_ventas(df: pd.DataFrame) -> DetalleVentas:
-    """
-    Convierte el DataFrame limpio a la estructura DetalleVentas con listas por tipo de documento.
-    """
     # Convertimos a lista de dicts (más cómodos para tu dataclass)
     rows = df.to_dict(orient='records')
 

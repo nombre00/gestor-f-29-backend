@@ -1,3 +1,5 @@
+# Escritor que genera un objeto de la clase entidad ResumenF29.
+
 # Bibliotecas.
 from typing import Dict
 # Entidades de entrada.
@@ -14,7 +16,7 @@ def resumenGenerador(rv: ResumenVentas, rc: ResumenCompras, lr: LibroRemuneracio
     resumen = ResumenF29()
     
     # Seguimos con el detalle ventas.
-    # Pasamos los atributos del objeto a la lista de diccionarios. 
+    # Pasamos los atributos del objeto a la lista de diccionarios.  
     resumen.ventas_detalle.append(rv.cod110)
     resumen.ventas_detalle.append(rv.cod34)
     resumen.ventas_detalle.append(rv.cod46)

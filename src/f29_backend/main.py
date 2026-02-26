@@ -6,7 +6,7 @@
     # routers: rutas REST, lo que conecta con el front.
 # application: lógica de negocio, incluye la carpeta services (orquestación, se llama funciones de otras partes).
 # core: necesidades comunes, incluye los archivos database, security y settings.
-    # database: es la conección con la base de datos en mySQL.
+    # database: es la conección con la base de datos en mySQL. 
     # security: incluye la gestion del token de validación del usuario.
     # settings: constantes que ocupan otros módulos, importa datos del archivo .env.
 # Domain/entities: modelos del negocio, clases tipicas de java.

@@ -23,16 +23,6 @@ class ResumenF29:
     gastos_generales_boletas: int  = 0
 
     # Métodos.
-    # Calcular total ventas.
-
-    # Calcular total compras.
-
-    # Calcular iva por pagar y remanente.
-
-    # Calcular PPMs.
-
-    # Calcular total total (TT).
-
     # Método to_dict (para serializar en comunicaciones REST).
     def to_dict(self):
         data = asdict(self)  # Guardamos los datos en una variable, queda como un diccionario ya que recibe un JSON.
