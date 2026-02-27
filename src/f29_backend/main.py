@@ -42,11 +42,14 @@ from sqlalchemy.orm import Session
 # Routers.
 from f29_backend.api.routers import authRouter
 from f29_backend.api.routers import clienteRouter
+from f29_backend.api.routers import empresaRouter
 from f29_backend.api.routers import invitacionesRouter
+from f29_backend.api.routers import resumenAnualRouter
 from f29_backend.api.routers import resumenF29Router
 from f29_backend.api.routers import usuariosRouter
 from f29_backend.api.routers import vistaGestorF29Router  
 from f29_backend.api.routers import vistaResumenF29Router
+
 
 
 # Persistencia.
@@ -84,7 +87,9 @@ app.add_middleware(
 # Incluir routers 
 app.include_router(authRouter.router)
 app.include_router(clienteRouter.router)
+app.include_router(empresaRouter.router)
 app.include_router(invitacionesRouter.router)
+app.include_router(resumenAnualRouter.router)
 app.include_router(resumenF29Router.router)
 app.include_router(usuariosRouter.router)
 app.include_router(vistaGestorF29Router.router) 
