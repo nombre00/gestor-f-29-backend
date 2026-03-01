@@ -77,12 +77,7 @@ class ResumenF29(Base):
     detalles_json = Column(
         JSON,
         nullable=True
-    )  # ← Aquí se guarda TODA la dataclass como JSON:
-       #   - encabezado
-       #   - ventas_detalle (lista completa de códigos)
-       #   - compras_detalle
-       #   - remuneraciones, honorarios, ppm, TT, etc.
-       #   - Cualquier dato adicional que agregues en el futuro
+    ) 
 
 
     

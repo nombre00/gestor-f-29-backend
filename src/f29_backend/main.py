@@ -49,12 +49,10 @@ from f29_backend.api.routers import resumenF29Router
 from f29_backend.api.routers import usuariosRouter
 from f29_backend.api.routers import vistaGestorF29Router  
 from f29_backend.api.routers import vistaResumenF29Router
-
-
-
 # Persistencia.
 from f29_backend.core.database import engine, get_db, Base
 from f29_backend.infrastructure.persistence.models import Empresa, Usuario, Cliente, resumenF29Modelo
+
 
 # Crear app
 app = FastAPI(
@@ -110,7 +108,7 @@ def startup_event():
     Base.metadata.create_all(bind=engine)
     print("Tablas creadas exitosamente")
 
-# Health check (opcional pero útil)
+# Health check (opcional pero útil) 
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "database": "connected"}

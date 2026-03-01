@@ -5,11 +5,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # Módulos.
-from f29_backend.core.database import get_db
-from f29_backend.core.security import get_current_user, require_role
-from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUsuario
-from f29_backend.infrastructure.persistence.repository.clienteRepository import ClienteRepository
-from f29_backend.api.schemas.clienteSchema import ClienteCreate, ClienteUpdate, ClienteResponse, ClienteListResponse
+from f29_backend.core.database import get_db  # La conección.
+from f29_backend.core.security import get_current_user, require_role  # Seguridad.
+from f29_backend.infrastructure.persistence.models.usuario import Usuario, RolUsuario  # Moldelo de la base de datos.
+from f29_backend.infrastructure.persistence.repository.clienteRepository import ClienteRepository  # Accesadores de clientes.
+from f29_backend.api.schemas.clienteSchema import ClienteCreate, ClienteUpdate, ClienteResponse, ClienteListResponse  # Schemas de respuesta REST.
 
 
 # Prefijo de las rutas de este archivo.

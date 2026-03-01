@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 # Módulos.
 from f29_backend.infrastructure.persistence.models import Cliente
+from f29_backend.infrastructure.persistence.models import Usuario  # Para corregir desde acá todas las llamadas a buscar por usuario.
 
 
 class ClienteRepository:
@@ -22,20 +23,20 @@ class ClienteRepository:
             rut=rut,
             razon_social=razon_social,
             activo=True,
-            **kwargs
+            **kwargs  # Argumentos opcionales, varían en número
         )
         self.db.add(cliente)  # Agrega.
         self.db.commit()  # Guarda.
-        self.db.refresh(cliente)  # Regresca.
+        self.db.refresh(cliente)  # Refresca.
         return cliente
     
 
     # Buscar uno.
-    # Busca por id.  -- Lo usa SUPER.
+    # Busca por id.
     def find_by_id(self, cliente_id: int) -> Optional[Cliente]:
         return self.db.query(Cliente).filter(Cliente.id == cliente_id).first()
     
-    # Busca por id  y  id de la empresa.  -- Lo usa ADMIN de la empresa.
+    # Busca por id  y  id de la empresa.
     def find_by_id_y_empresa(self, cliente_id: int, empresa_id: int) -> Optional[Cliente]:
         return self.db.query(Cliente).filter(Cliente.id == cliente_id).filter(Cliente.empresa_id == empresa_id).first()
     
@@ -59,11 +60,20 @@ class ClienteRepository:
         return query.offset(skip).limit(limit).all()
     
     # Lista clientes asociados a un usuario.
-    def find_by_usuario(self, usuario_id: int, solo_activos: bool = True) -> List[Cliente]:
+    # Al final todos los trabajadores de la empresa acceden a los mismos clientes, vamos a reemplazar el codigo de abajo con una copia de buscar por empresa.
+    """ def find_by_usuario(self, usuario_id: int, solo_activos: bool = True) -> List[Cliente]:
         query = self.db.query(Cliente).filter(Cliente.asignado_a_usuario_id == usuario_id)
         if solo_activos:
             query = query.filter(Cliente.activo == True)
-        return query.all()
+        return query.all() """
+    def find_by_usuario(self, usuario_id: int, solo_activos: bool = True) -> List[Cliente]:
+        # Buscamos el usuario:
+        query1 = self.db.query(Usuario).filter(Usuario.id == usuario_id).first()
+        # Buscamos por empresa usando los datos del usuario encontrado.
+        query2 = self.db.query(Cliente).filter(Cliente.empresa_id == query1.empresa_id)
+        if solo_activos:
+            query2 = query2.filter(Cliente.activo == True)
+        return query2.all()
     
 
     # Actualizar.
@@ -72,11 +82,9 @@ class ClienteRepository:
         cliente = self.find_by_id(cliente_id)
         if not cliente:
             return None
-        
         for key, value in kwargs.items():
             if hasattr(cliente, key):
                 setattr(cliente, key, value)
-        
         self.db.commit()
         self.db.refresh(cliente)
         return cliente
@@ -86,7 +94,6 @@ class ClienteRepository:
         cliente = self.find_by_id(cliente_id)
         if not cliente:
             return None
-        
         cliente.asignado_a_usuario_id = nuevo_usuario_id
         self.db.commit()
         self.db.refresh(cliente)
@@ -97,7 +104,6 @@ class ClienteRepository:
         cliente = self.find_by_id(cliente_id)
         if not cliente  or  not cliente.activo:
             return False
-        
         cliente.activo = False
         self.db.commit()
         return True
@@ -107,7 +113,6 @@ class ClienteRepository:
         cliente = self.find_by_id(cliente_id)
         if not cliente  or  cliente.activo:
             return False
-        
         cliente.activo = True
         self.db.commit()
         return True

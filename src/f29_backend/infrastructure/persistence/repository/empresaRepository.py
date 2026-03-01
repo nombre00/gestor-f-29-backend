@@ -13,9 +13,7 @@ class EmpresaRepository:
         self.db = db
     
     # Crear una empresa.
-    def create(self, rut: str, razon_social: str, 
-               nombre_comercial: str = None, email: str = None,
-               telefono: str = None) -> Empresa:
+    def create(self, rut: str, razon_social: str, nombre_comercial: str = None, email: str = None, telefono: str = None) -> Empresa:
         empresa = Empresa(
             rut=rut,
             razon_social=razon_social,
@@ -42,8 +40,7 @@ class EmpresaRepository:
 
     # Listar.
     # Lista todas las empresas.
-    def find_all(self, skip: int = 0, limit: int = 100, 
-                 solo_activas: bool = True) -> List[Empresa]:
+    def find_all(self, skip: int = 0, limit: int = 100, solo_activas: bool = True) -> List[Empresa]:
         query = self.db.query(Empresa)
         if solo_activas:
             query = query.filter(Empresa.activa == True)
@@ -56,21 +53,18 @@ class EmpresaRepository:
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return None
-        
         for key, value in kwargs.items():
             if hasattr(empresa, key):
                 setattr(empresa, key, value)
-        
         self.db.commit()
         self.db.refresh(empresa)
         return empresa
     
     # Desactivar.
-    def delete(self, empresa_id: int) -> bool:
+    def deactivate(self, empresa_id: int) -> bool:
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return False
-        
         empresa.activa = False
         self.db.commit()
         return True
@@ -81,7 +75,6 @@ class EmpresaRepository:
         empresa = self.find_by_id(empresa_id)
         if not empresa:
             return False
-        
         self.db.delete(empresa)
         self.db.commit()
         return True

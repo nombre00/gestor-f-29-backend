@@ -22,6 +22,8 @@ class ResumenF29:
     arriendos_pagados: int         = 0
     gastos_generales_boletas: int  = 0
 
+
+
     # Métodos.
     # Método to_dict (para serializar en comunicaciones REST).
     def to_dict(self):
