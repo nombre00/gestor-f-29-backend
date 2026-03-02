@@ -8,7 +8,7 @@ from f29_backend.core.database import get_db
 from f29_backend.core.security import get_current_user
 from f29_backend.infrastructure.persistence.models.usuario import Usuario
 from f29_backend.application.services.resumenAnualService import ResumenAnualService
-from f29_backend.api.schemas.resumenAnualSchema import  ResumenAnualResponse, ResumenAnualRecalcularRequest, ResumenAnualListItem
+from f29_backend.api.schemas.resumenAnualSchema import  ResumenAnualResponse, ResumenAnualListItem
 from f29_backend.infrastructure.persistence.repository.resumenAnualRepository import ResumenAnualRepository, EstadoResumenAnual
 
 
@@ -74,7 +74,7 @@ def get_resumen_anual(cliente_id: int,anio: str,current_user: Usuario = Depends(
 # Recalcula un resumen anual, es llamado en el botón recalcular de la pagina previsualizar resumenAnual.
 # Cuando revisemos el front, ve si llamas esta función pasándole ResumenAnualRecalcularRequest, sino se saca.
 @router.post("/resumen-anual/{cliente_id}/{anio}/recalcular",response_model=ResumenAnualResponse,summary="Recalcula el resumen anual sumando todos los F29 existentes del año",)
-def recalcular_resumen_anual(cliente_id: int,anio: str,request: ResumenAnualRecalcularRequest = None,
+def recalcular_resumen_anual(cliente_id: int,anio: str,
     current_user: Usuario = Depends(get_current_user),db: Session = Depends(get_db),):
 
     service = ResumenAnualService(db)  # Nos conectamos.

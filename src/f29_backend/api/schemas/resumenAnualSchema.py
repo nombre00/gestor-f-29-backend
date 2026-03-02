@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
+from typing import List, Dict
 from datetime import datetime
 from enum import Enum
 
@@ -47,10 +47,6 @@ class ResumenAnualResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class ResumenAnualRecalcularRequest(BaseModel):
-    pass
 
 
 class ResumenAnualListItem(BaseModel):

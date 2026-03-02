@@ -17,6 +17,7 @@ from f29_backend.api.schemas.resumenF29Schema import (
 router = APIRouter(prefix="/api/resumenes", tags=["resumenes-f29"])
 
 
+# Funcion auxiliar para verificar los permisos sobre un cliente.
 def _verificar_acceso_cliente(cliente: Cliente, current_user: Usuario):
     """Helper para verificar permisos sobre un cliente"""
     if not cliente:
@@ -28,24 +29,16 @@ def _verificar_acceso_cliente(cliente: Cliente, current_user: Usuario):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
 
 
+# Funcion que busca los datos del dashboard. ((( Acá tenemos que editar para buscar todos los clientes de la empresa )))
 @router.get("/dashboard", response_model=DashboardResumenResponse)
-def obtener_datos_dashboard(
-    mes: int = None,
-    anio: int = None,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Datos para el dashboard del contador:
-    - Resúmenes F29 hechos en el mes
-    - Clientes sin resumen F29 en el mes
-    Por defecto usa el mes y año actuales.
-    """
+def obtener_datos_dashboard(mes: int = None,anio: int = None,db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)):
+    # Buscamos el mes y año actual y los guardamos en varibales, esto para buscar los documentos este mes.
     hoy = date.today()
     mes = mes or hoy.month
     anio = anio or hoy.year
 
-    repo = ResumenF29Repository(db)
+    repo = ResumenF29Repository(db)  # Nos conectamos.
 
     resumenes = repo.find_by_usuario_y_mes(current_user.id, anio, mes)
     pendientes = repo.find_clientes_sin_resumen_en_mes(current_user.id, anio, mes)

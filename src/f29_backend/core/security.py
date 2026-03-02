@@ -63,10 +63,7 @@ def create_access_token(
 
 
 # Valida el token.
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
-) -> Usuario:
+async def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db),) -> Usuario:
     """
     Dependencia principal: valida el JWT y retorna el usuario actual.
     Levanta HTTPException automáticamente si falla.
@@ -77,11 +74,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY.get_secret_value() ,
-            algorithms=[ALGORITHM],
-        )
+        payload = jwt.decode(token,settings.SECRET_KEY.get_secret_value() ,algorithms=[ALGORITHM],)
         user_id_str: str | None = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
