@@ -1,0 +1,120 @@
+# ==============================================================================
+# GESTOR F29 - Docker Compose
+# ==============================================================================
+# Orquesta dos servicios: la base de datos MySQL y el backend FastAPI.
+# Uso:
+#   Levantar:  docker compose up -d
+#   Detener:   docker compose down
+#   Logs:      docker compose logs -f
+# ==============================================================================
+
+services:
+
+  # ----------------------------------------------------------------------------
+  # SERVICIO 1: Base de datos MySQL
+  # ----------------------------------------------------------------------------
+  db:
+    # Imagen oficial de MySQL 8.0 desde Docker Hub.
+    # Fijamos la versión menor (8.0) para evitar actualizaciones automáticas
+    # inesperadas que puedan romper compatibilidad.
+    image: mysql:8.0
+
+    # Política de reinicio: el contenedor se reinicia automáticamente si falla
+    # o si el PC se reinicia, a menos que el usuario lo haya detenido
+    # manualmente con "docker compose down".
+    restart: unless-stopped
+
+    # Variables de entorno que MySQL usa para inicializarse la primera vez.
+    # Estas variables deben coincidir con las credenciales en DATABASE_URL
+    # del archivo .env.
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    # Volumen persistente: los datos de MySQL se guardan en un volumen
+    # administrado por Docker, no dentro del contenedor.
+    # Si el contenedor se elimina y se vuelve a crear, los datos sobreviven.
+    # CRÍTICO: sin esto, cada reinicio borra toda la base de datos.
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    # Healthcheck: Docker verifica periódicamente si MySQL está realmente
+    # listo para aceptar conexiones (no solo si el proceso está corriendo).
+    # El backend esperará a que este healthcheck pase antes de arrancar.
+    #   interval: cada cuánto chequea
+    #   timeout: cuánto espera la respuesta antes de considerarlo fallido
+    #   retries: cuántos fallos consecutivos antes de marcar como "unhealthy"
+    #   start_period: tiempo de gracia al inicio antes de empezar a chequear
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Red interna a la que pertenece este servicio.
+    networks:
+      - gestorf29_network
+
+
+  # ----------------------------------------------------------------------------
+  # SERVICIO 2: Backend FastAPI
+  # ----------------------------------------------------------------------------
+  backend:
+    # En vez de usar una imagen preexistente, construimos la imagen desde
+    # el Dockerfile que está en el directorio actual (.).
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    # Mapeo de puertos: HOST:CONTENEDOR
+    # El puerto 8000 del contenedor se expone como 8000 en el PC host.
+    # Los usuarios de la red local acceden a través de este puerto.
+    ports:
+      - "8000:8000"
+
+    # Carga todas las variables del archivo .env y las inyecta en el contenedor.
+    # Así el backend tiene acceso a SECRET_KEY, DATABASE_URL, etc.
+    env_file:
+      - .env
+
+    # Dependencia con condición: el backend no arranca hasta que el healthcheck
+    # de MySQL pase exitosamente. Evita errores de conexión al inicio.
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Red interna: mismo network que el servicio db para que puedan
+    # comunicarse entre sí usando el nombre del servicio como hostname.
+    # Desde el backend, MySQL es accesible como "db:3306".
+    networks:
+      - gestorf29_network
+
+
+# ------------------------------------------------------------------------------
+# VOLÚMENES
+# ------------------------------------------------------------------------------
+# Declara el volumen mysql_data como un volumen administrado por Docker.
+# Docker lo crea automáticamente la primera vez y lo mantiene entre reinicios.
+# Para ver los volúmenes existentes: docker volume ls
+# Para eliminar los datos (¡cuidado!): docker volume rm gestorf29_mysql_data
+# ------------------------------------------------------------------------------
+volumes:
+  mysql_data:
+    name: gestorf29_mysql_data
+
+
+# ------------------------------------------------------------------------------
+# REDES
+# ------------------------------------------------------------------------------
+# Red interna tipo bridge que aísla los contenedores del resto del sistema.
+# Los contenedores en esta red se comunican entre sí por nombre de servicio,
+# pero están aislados de otras redes de Docker que puedas tener.
+# ------------------------------------------------------------------------------
+networks:
+  gestorf29_network:
+    driver: bridge

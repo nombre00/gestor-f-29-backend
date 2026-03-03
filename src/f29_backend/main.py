@@ -26,7 +26,7 @@
 
 
 
-# gestorf29-backend/src/f29_backend    - para cuando necesites copiar y pegar
+# gestorf29-backend/src/f29_backend    - para cuando necesites copiar y pegar 
 # Comandos útiles.
 # Para moverme a la carptea raiz:            $env:PYTHONPATH="src" 
 # Para crear el entorno virtual:            python -m venv .venv

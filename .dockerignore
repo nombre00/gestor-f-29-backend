@@ -1,0 +1,95 @@
+# ==============================================================================
+# GESTOR F29 - .dockerignore
+# ==============================================================================
+# Define qué archivos y carpetas excluir cuando Docker copia el proyecto
+# al contenedor (instrucción COPY del Dockerfile).
+# Reduce el tamaño de la imagen y evita copiar archivos sensibles o innecesarios.
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+# SEGURIDAD - Nunca copiar al contenedor
+# ------------------------------------------------------------------------------
+# El .env tiene contraseñas y claves reales. El contenedor recibe estas
+# variables a través de env_file en docker-compose.yml, no por copia directa.
+.env
+
+# Archivos de clave privada o certificados que pudieran existir en el proyecto.
+*.pem
+*.key
+*.cert
+
+
+# ------------------------------------------------------------------------------
+# ENTORNO VIRTUAL DE PYTHON
+# ------------------------------------------------------------------------------
+# El contenedor instala sus propias dependencias desde requirements.txt.
+# Copiar el .venv local sería incorrecto (está compilado para Windows,
+# el contenedor corre Linux) y además pesa varios cientos de MB.
+.venv
+venv
+env
+
+
+# ------------------------------------------------------------------------------
+# FRONTEND - Fuentes y dependencias
+# ------------------------------------------------------------------------------
+# El frontend ya está compilado y su output está en src/f29_backend/static/.
+# No necesitamos copiar el proyecto fuente del frontend ni sus dependencias.
+gestorf29-frontend-react/
+
+# Por si hubiera un node_modules en otro lugar del proyecto.
+node_modules/
+
+
+# ------------------------------------------------------------------------------
+# CACHÉ Y ARCHIVOS COMPILADOS DE PYTHON
+# ------------------------------------------------------------------------------
+# Archivos generados automáticamente por Python, no forman parte del código.
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+
+# ------------------------------------------------------------------------------
+# CONTROL DE VERSIONES
+# ------------------------------------------------------------------------------
+# La historia de git no es necesaria dentro del contenedor.
+.git/
+.gitignore
+
+
+# ------------------------------------------------------------------------------
+# HERRAMIENTAS DE DESARROLLO Y EDITORES
+# ------------------------------------------------------------------------------
+# Configuraciones locales de editores e IDEs.
+.vscode/
+.idea/
+*.code-workspace
+
+# Archivos de sistema de Windows y macOS.
+Thumbs.db
+.DS_Store
+
+
+# ------------------------------------------------------------------------------
+# LOGS Y ARCHIVOS TEMPORALES
+# ------------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+logs/
+
+
+# ------------------------------------------------------------------------------
+# ARCHIVOS DE ESTE KIT DE DESPLIEGUE
+# ------------------------------------------------------------------------------
+# Documentación e instrucciones de instalación: no son necesarias en el contenedor.
+instrucciones.md
+iniciar.bat
+detener.bat
+backup.bat
