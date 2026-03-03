@@ -28,17 +28,20 @@
 
 # gestorf29-backend/src/f29_backend    - para cuando necesites copiar y pegar
 # Comandos útiles.
-# Para moverme a la carptea raiz:     $env:PYTHONPATH="src" 
-# Con este comando le decimos al backend en que puerto correr.
-# Para correr por terminal:   uvicorn src.f29_backend.main:app --reload --port 8000
+# Para moverme a la carptea raiz:            $env:PYTHONPATH="src" 
 # Para crear el entorno virtual:            python -m venv .venv
 # Para correr el entorno virtual:           .\.venv\Scripts\Activate.ps1
+# Para correr el programa por terminal:   uvicorn src.f29_backend.main:app --reload --port 8000
 
 
 # Bibliotecas.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+import os
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+from fastapi.responses import FileResponse
 # Routers.
 from f29_backend.api.routers import authRouter
 from f29_backend.api.routers import clienteRouter
@@ -63,11 +66,12 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+
 # CORS
 # Medida de seguridad, restringe acceso a fuentes que no sean del mismo dominio que la aplicación.
 # Lista de orígenes permitidos si el despliegue es on premise y localhost (lista en desarrollo).
 origins = [
-    "http://localhost:3000",       # React create-react-app típico
+    "http://localhost:8000",       # React create-react-app típico
     "http://localhost:5173",       # Vite (el más común hoy en día)
     "http://127.0.0.1:3000",       # a veces el navegador usa 127.0.0.1 en vez de localhost
     "http://127.0.0.1:5173",
@@ -76,11 +80,12 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     # allow_origins=origins,  # En producción
-    allow_origins=["*"],      # En desarrollo.
+    allow_origins=["*"],      # En desarrollo.   # Para producción cambiar a la subred, ejemplo: "http://192.168.."
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Incluir routers 
 app.include_router(authRouter.router)
@@ -94,6 +99,9 @@ app.include_router(vistaGestorF29Router.router)
 app.include_router(vistaResumenF29Router.router)
 
 
+""" # Servir React como SPA
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/", StaticFiles(directory=static_dir, html=True), name="static") """
 
 
 # Root
@@ -108,8 +116,30 @@ def startup_event():
     Base.metadata.create_all(bind=engine)
     print("Tablas creadas exitosamente")
 
-# Health check (opcional pero útil) 
+# Health check
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "database": "connected"}
 
+
+
+# Servir archivos estáticos (js, css, imágenes, etc.)
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+
+# Catch-all para SPA: cualquier ruta desconocida devuelve index.html
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    index = os.path.join(static_dir, "index.html")
+    return FileResponse(index)
+
+
+
+# Host que escucha toda la red donde está el PC.
+if __name__ == "__main__":
+    uvicorn.run(
+        app, 
+        host="0.0.0.0",      # ESTO ES LO IMPORTANTE
+        port=8000,
+        log_level="info"
+    )
