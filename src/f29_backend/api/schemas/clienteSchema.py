@@ -9,6 +9,7 @@ class ClienteCreate(BaseModel):
     nombre_comercial: Optional[str] = Field(None, max_length=255)
     giro: Optional[str] = Field(None, max_length=255)
     actividad_economica: Optional[str] = Field(None, max_length=255)
+    nro_cliente: Optional[str] = Field(None, max_length=50)
     direccion: Optional[str] = Field(None, max_length=500)
     comuna: Optional[str] = Field(None, max_length=100)
     ciudad: Optional[str] = Field(None, max_length=100)
@@ -29,6 +30,7 @@ class ClienteUpdate(BaseModel):
     nombre_comercial: Optional[str] = Field(None, max_length=255)
     giro: Optional[str] = Field(None, max_length=255)
     actividad_economica: Optional[str] = Field(None, max_length=255)
+    nro_cliente: Optional[str] = Field(None, max_length=50)
     direccion: Optional[str] = Field(None, max_length=500)
     comuna: Optional[str] = Field(None, max_length=100)
     ciudad: Optional[str] = Field(None, max_length=100)
@@ -44,6 +46,7 @@ class ClienteResponse(BaseModel):
     nombre_comercial: Optional[str]
     giro: Optional[str]
     actividad_economica: Optional[str]
+    nro_cliente: Optional[str]
     direccion: Optional[str]
     comuna: Optional[str]
     ciudad: Optional[str]

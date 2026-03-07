@@ -22,7 +22,7 @@
     # pip install pydantic[email]
     # pip install resend
     # pip install bs4 
-    # pip install lxml
+    # pip install lxml 
 
 
 

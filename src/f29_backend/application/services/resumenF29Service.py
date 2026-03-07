@@ -30,7 +30,7 @@ from f29_backend.infrastructure.persistence.models.cliente import Cliente
 
 
 
-# Se usa en la vista gestionarF29.
+# Se usa en la vista gestionarF29. 
 # Controlador que recibe las rutas y las importaciones como parámetro, crea un excel y lo exporta.
 def controladorResumenF29_v4(
         rutaResumenVentas, 
@@ -71,9 +71,8 @@ def controladorResumenF29_v4(
     # LLenamos la plantilla del resumen con los datos del resumen.
     resumenF29Escritor2(resumen, plantillaResumen)
 
-
     # Guardamos en carpeta de salidas. 
-    # ── Decidir dónde y con qué nombre guardar ───────────────────────────────
+    # Decidir dónde y con qué nombre guardar.
     if ruta and ruta.strip():  # si se pasó una ruta válida y no está vacía
         ruta_salida = ruta
         # Aseguramos que tenga extensión .xlsx (por si el usuario olvidó)
@@ -86,7 +85,7 @@ def controladorResumenF29_v4(
         nombre_salida = f"resumenPrueba_F29_107.xlsx"   # ← podrías hacer este nombre más dinámico después
         ruta_salida = os.path.join(carpeta_salidas, nombre_salida)
         
-    # ── Guardar ───────────────────────────────────────────────────────────────
+    # Guardar.
     try:
         plantillaResumen.save(ruta_salida)
         print(f"Plantilla generada en: {ruta_salida}")
@@ -154,6 +153,7 @@ def exportarAExcel(resumen: ResumenF29, ruta: str):
 
 
 # Funciones que gestionan inputs en bytes (esto es para recibir los datos del front).
+# Se usan en las funciones de las páginas, el front manda los archivos como bytes.
 logger = logging.getLogger(__name__)
 def procesar_f29_y_obtener_resumen(
     ventas_bytes: bytes,

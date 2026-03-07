@@ -256,7 +256,7 @@ def resumenF29Escritor2(resumen: ResumenF29, plantilla: openpyxl.Workbook) -> op
 
         # Linea 35, Remanente Crédito Fiscal Mes Anterior UTM.
         remanenteMesAnterior = resumen.remanenteMesAnterior 
-        cell(35, 5, remanenteMesAnterior , align=right)  # Ingresamos el texto.
+        cell(35, 10, remanenteMesAnterior , align=right)  # Ingresamos el texto.
     
 
     # Continuamos en el total de las compras.

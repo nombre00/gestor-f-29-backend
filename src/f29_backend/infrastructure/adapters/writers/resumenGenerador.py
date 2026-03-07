@@ -151,9 +151,9 @@ def resumenGenerador(rv: ResumenVentas, rc: ResumenCompras, lr: LibroRemuneracio
     encabezado['periodo_mes'] = mes
     encabezado['periodo_anio'] = anio
     encabezado['nombre'] = lr.encabezado['razon_social']
-    encabezado['numero'] = 4  # Preguntar de donde saco este número o si lo llenan ellos.
+    encabezado['numero'] = 0  # sacamos el número del cliente.
     encabezado['rut'] = lr.encabezado['rut']
-    encabezado['clave_sii'] = 1  # Preguntar de donde saco ese dato o si lo llenan ellos.
+    encabezado['clave_sii'] = 1  # No la usamos.
     resumen.encabezado = encabezado
 
     # Retornamos el RVC.
@@ -327,9 +327,9 @@ def resumenGenerador2(
     encabezado['periodo_mes'] = mes
     encabezado['periodo_anio'] = anio
     encabezado['nombre'] = lr.encabezado['razon_social']
-    encabezado['numero'] = 4  # Preguntar de donde saco este número o si lo llenan ellos.
+    encabezado['numero'] = 0  # sacamos el número del cliente.
     encabezado['rut'] = lr.encabezado['rut']
-    encabezado['clave_sii'] = 1  # Preguntar de donde saco ese dato o si lo llenan ellos.
+    encabezado['clave_sii'] = 1  # No la usamos.
     resumen.encabezado = encabezado
 
     # Retornamos el RVC.
@@ -497,10 +497,10 @@ def resumenGenerador3(
     encabezado['periodo_mes'] = mes
     encabezado['periodo_anio'] = anio
     encabezado['nombre'] = lr.encabezado['razon_social']
-    encabezado['numero'] = 4  # Preguntar de donde saco este número o si lo llenan ellos.
+    encabezado['numero'] = 0  # sacamos el número del cliente.
     encabezado['rut'] = lr.encabezado['rut']
-    encabezado['clave_sii'] = 1  # Preguntar de donde saco ese dato o si lo llenan ellos.
+    encabezado['clave_sii'] = 1  # No la usamos.
     resumen.encabezado = encabezado
 
-    # Retornamos el RVC.
+    # Retornamos el RVC. 
     return resumen

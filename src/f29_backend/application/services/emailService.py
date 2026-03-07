@@ -8,7 +8,7 @@ from typing import Optional
 from f29_backend.core.settings import settings
 
 
-# Configurar API key al importar el módulo
+# Configurar API key al importar el módulo 
 resend.api_key = settings.RESEND_API_KEY.get_secret_value()
 
 # Remitente configurable por variable de entorno

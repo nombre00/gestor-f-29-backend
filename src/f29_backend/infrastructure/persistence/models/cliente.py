@@ -25,6 +25,8 @@ class Cliente(Base):
         nullable=False,
         index=True  # genera un índice.
     )
+    # Dato nuevo.
+    nro_cliente = Column(String(50), nullable=True)
     
     # Datos del cliente (PYME).
     rut = Column(String(12), nullable=False, index=True)

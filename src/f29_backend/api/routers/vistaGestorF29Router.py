@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse    # para la comunicación REST
 import io    # para manejar carpetas del pc creo
 import json   # para manejar json
 from sqlalchemy.orm import Session    # para manejar la base de datos
-from typing import Optional, Dict    # tipos de datos
+from typing import Optional, Dict    # tipos de datos 
 import re   # validación de fechas
 # Módulos. 
 from f29_backend.application.services.resumenF29Service import procesar_f29_y_obtener_resumen, generar_excel_en_memoria, guardar_resumen_f29
@@ -69,7 +69,7 @@ async def procesar_resumen(
     remanente_anterior: int = Form(0),
     arriendos_pagados: int = Form(0),  # Nuevo dato.
     gastos_generales_boletas: int = Form(0),  # Nuevo dato.
-    # importaciones: Optional[str] = Form(None),   # deprecado.
+    nro_cliente: str = Form(""),
     archivo_ventas: UploadFile = File(...),
     archivo_compras: UploadFile = File(...),
     archivo_remuneraciones: UploadFile = File(...),
@@ -82,9 +82,6 @@ async def procesar_resumen(
         if not re.match(r'^\d{4}-(0[1-9]|1[0-2])$', periodo):
             raise HTTPException(status_code=400,detail="Formato de período inválido. Use 'YYYY-MM' (ej: 2025-12)")
 
-        # Esto está deprecando.
-        # importaciones_dict = json.loads(importaciones) if importaciones else {}
-
         # Generar el resumen en memoria (asíncrono).
         resumen: ResumenF29 = procesar_f29_y_obtener_resumen(
             ventas_bytes=await archivo_ventas.read(),
@@ -94,8 +91,9 @@ async def procesar_resumen(
             remanente=remanente_anterior,
             arriendos_pagados = arriendos_pagados,  # valores nuevos.
             gastos_generales_boletas = gastos_generales_boletas,  # valores nuevos.
-            # importaciones=importaciones_dict,  # deprecado.
         )
+        # Asignamos el nro del cliente.
+        resumen.encabezado['numero'] = nro_cliente
 
         # Persistimos
         modelo = guardar_resumen_f29(db=db,entity=resumen,cliente_id=cliente_id,creado_por_id=current_user.id,periodo=periodo)
@@ -127,7 +125,7 @@ async def generar_excel(
     remanente_anterior: int = Form(0),
     arriendos_pagados: int = Form(0),  # Nuevo dato.
     gastos_generales_boletas: int = Form(0),  # Nuevo dato
-    # importaciones: Optional[str] = Form(None),  # deprecado.
+    nro_cliente: str = Form(""),
     archivo_ventas: UploadFile = File(...),
     archivo_compras: UploadFile = File(...),
     archivo_remuneraciones: UploadFile = File(...),
@@ -151,9 +149,6 @@ async def generar_excel(
                 detail="Formato de período inválido. Use 'YYYY-MM' (ej: 2025-12)"
             )
 
-        # importaciones está deprecado.
-        # importaciones_dict = json.loads(importaciones) if importaciones else {}
-
         # Generar el resumen en memoria
         resumen: ResumenF29 = procesar_f29_y_obtener_resumen(
             ventas_bytes=await archivo_ventas.read(),
@@ -163,9 +158,10 @@ async def generar_excel(
             remanente=remanente_int,
             arriendos_pagados = arriendos_pagados,  # valores nuevos.
             gastos_generales_boletas = gastos_generales_boletas,  # valores nuevos.
-            # importaciones=importaciones_dict,  # deprecado.
         )
         #print("Resumen generado OK")
+        # Asignamos el nro del cliente.
+        resumen.encabezado['numero'] = nro_cliente
 
         # Persistimos, modelo no se usa
         modelo = guardar_resumen_f29(db=db,entity=resumen,cliente_id=cliente_id_int,creado_por_id=current_user.id,periodo=periodo)
@@ -194,70 +190,3 @@ async def generar_excel(
 
 
 
-
-
-# Version vieja, deprecada.
-""" @router.post("/procesar")
-async def procesar_resumen(
-    current_user: CurrentUser,  # Token del ususario ingresado.
-    remanente_anterior: int = Form(0),
-    importaciones: str = Form(None),
-    archivo_ventas: UploadFile = File(...),
-    archivo_compras: UploadFile = File(...),
-    archivo_remuneraciones: UploadFile = File(...),
-    archivo_honorarios: UploadFile = File(...),
-):
-    try:
-        importaciones_dict = json.loads(importaciones) if importaciones else {}
-
-        resumen: ResumenF29 = procesar_f29_y_obtener_resumen(
-            ventas_bytes=await archivo_ventas.read(),
-            compras_bytes=await archivo_compras.read(),
-            remuneraciones_bytes=await archivo_remuneraciones.read(),
-            honorarios_bytes=await archivo_honorarios.read(),
-            remanente=remanente_anterior,
-            importaciones=importaciones_dict,
-        )
-
-        return {"resumen": resumen.to_dict()}
-
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
-
-
-@router.post("/generar-excel")
-async def generar_excel(
-    current_user: CurrentUser,  # Token del ususario ingresado.
-    remanente_anterior: int = Form(0),
-    importaciones: str = Form(None),
-    archivo_ventas: UploadFile = File(...),
-    archivo_compras: UploadFile = File(...),
-    archivo_remuneraciones: UploadFile = File(...),
-    archivo_honorarios: UploadFile = File(...),
-):
-    try:
-        importaciones_dict = json.loads(importaciones) if importaciones else {}
-
-        resumen: ResumenF29 = procesar_f29_y_obtener_resumen(
-            ventas_bytes=await archivo_ventas.read(),
-            compras_bytes=await archivo_compras.read(),
-            remuneraciones_bytes=await archivo_remuneraciones.read(),
-            honorarios_bytes=await archivo_honorarios.read(),
-            remanente=remanente_anterior,
-            importaciones=importaciones_dict,
-        )
-
-        excel_bytes = generar_excel_en_memoria(resumen)
-
-        return StreamingResponse(
-            io.BytesIO(excel_bytes),
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=resumen_f29.xlsx"}
-        )
-
-    except ValueError as ve:
-        raise HTTPException(400, detail=str(ve))
-    except Exception as e:
-        raise HTTPException(500, detail=f"Error interno: {str(e)}") """
