@@ -19,7 +19,6 @@ router = APIRouter(prefix="/api/resumenes", tags=["resumenes-f29"])
 
 # Funcion auxiliar para verificar los permisos sobre un cliente.
 def _verificar_acceso_cliente(cliente: Cliente, current_user: Usuario):
-    """Helper para verificar permisos sobre un cliente"""
     if not cliente:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
     if cliente.empresa_id != current_user.empresa_id:
@@ -29,7 +28,7 @@ def _verificar_acceso_cliente(cliente: Cliente, current_user: Usuario):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado")
 
 
-# Funcion que busca los datos del dashboard. ((( Acá tenemos que editar para buscar todos los clientes de la empresa )))
+# Funcion que busca los datos del dashboard. 
 @router.get("/dashboard", response_model=DashboardResumenResponse)
 def obtener_datos_dashboard(mes: int = None,anio: int = None,db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)):
@@ -49,6 +48,7 @@ def obtener_datos_dashboard(mes: int = None,anio: int = None,db: Session = Depen
             cliente_id=r.cliente_id,
             rut_cliente=r.cliente.rut,
             razon_social_cliente=r.cliente.razon_social,
+            nro_cliente=r.cliente.nro_cliente,
             periodo=r.periodo,
             estado=r.estado,
             iva_a_pagar=r.iva_a_pagar,

@@ -64,13 +64,7 @@ def crear_cliente(cliente_data: ClienteCreate,db: Session = Depends(get_db),curr
     print("id:", getattr(current_user, 'id', None))
     print("empresa_id:", getattr(current_user, 'empresa_id', None))
     print("rol:", getattr(current_user, 'rol', None))
-
-    """ # Determinar asignación
-    if current_user.rol in [RolUsuario.ADMIN, RolUsuario.SUPER]:
-        # asignado_a = cliente_data.asignado_a_usuario_id or current_user.id
-        asignado_a = current_user.id
-    else:
-        asignado_a = current_user.id  # Contador siempre se asigna a sí mismo """
+    
     asignado_a = current_user.id
 
     # Extraer campos opcionales
