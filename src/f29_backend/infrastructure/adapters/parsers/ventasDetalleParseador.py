@@ -24,7 +24,7 @@ def parse_detalle_ventas(bytes_content: bytes):
         header += ';'
 
     # 3. Reconstruimos el contenido completo con el header corregido
-    new_content = header + '\n' + ''.join(lines[1:])
+    new_content = header + '\n' + '\n'.join(lines[1:])
 
     # 4. Ahora sí leemos con pandas usando el contenido modificado
     df = pd.read_csv(
