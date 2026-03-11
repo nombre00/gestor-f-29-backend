@@ -18,7 +18,7 @@ class ResumenF29:
     honorarios:      Dict          = field(default_factory=dict)
     ppm:             Dict          = field(default_factory=dict)
     TT:              int           = 0
-    # Datos extra (ajenos al documento).
+    # Datos extra (ajenos al documento). 
     arriendos_pagados: int         = 0
     gastos_generales_boletas: int  = 0
 

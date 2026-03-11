@@ -1,15 +1,12 @@
+# Bibliotecas.
 from typing import List, Dict, Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-
+# Módulos.
 from f29_backend.infrastructure.persistence.repository.resumenAnualRepository import ResumenAnualRepository
 from f29_backend.infrastructure.persistence.repository.resumenF29Repository import ResumenF29Repository
 from f29_backend.domain.entities.resumenF29 import ResumenF29  # entidad dominio
-from f29_backend.api.schemas.resumenAnualSchema import (
-    ResumenAnualResponse,
-    ResumenAnualContenido,
-    EstadoResumenAnual,
-)
+from f29_backend.api.schemas.resumenAnualSchema import ResumenAnualResponse, ResumenAnualContenido, EstadoResumenAnual
 from f29_backend.infrastructure.persistence.models.usuario import Usuario
 from f29_backend.infrastructure.persistence.repository.clienteRepository import ClienteRepository
 
@@ -61,7 +58,8 @@ class ResumenAnualService:
 
 
 
-    # Crea o edita una fila en la tabla resumenesAnuales (no calcula datos, solo crea la entrada en la tabla con 0s).
+    # Método que se usa cuando navegamos de la página gestor a la pagina vista de resumenAnual.
+    # Crea o retorna un resumenAnual (no calcula datos, solo crea la entrada en la tabla con 0s).
     def get_or_create_anual(self, cliente_id: int, año: str, usuario_id: int) -> ResumenAnualResponse:
         anual = self.repo_anual.get_by_cliente_and_año(cliente_id, año)  # Buscamos el resumenAnual.
         if not anual:  # Si no lo encontramos lo creamos.
@@ -218,13 +216,35 @@ class ResumenAnualService:
         ultimo_mes = periodos[-1].split("-")[1]
         meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio","Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
         return f"{meses[int(primer_mes)-1]} - {meses[int(ultimo_mes)-1]} {año}"
+    
+
+
+    # Calcula o cuenta cuantos meses sin el año.
+    def _generar_meses(self, periodos: List[str]) -> str:
+        if not periodos:
+            return " - "
+        primer_mes = periodos[0].split("-")[1]
+        ultimo_mes = periodos[-1].split("-")[1]
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio","Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        return f"{meses[int(primer_mes)-1]} - {meses[int(ultimo_mes)-1]}"
 
 
 
     # Genera un esquema de respuesta, recibe un resumenAnual de argumento.
+    # Acá cambio el encabezado del resumenAnual entidad por el de resumenAnual modelo.
     def _to_response(self, anual) -> ResumenAnualResponse:  # Retorna un esquema de una respuesta de resumenAnual.
         periodos = anual.periodos_incluidos_json or []
         meses_count = len(periodos)
+        rango_de_texto = self._generar_rango_texto(periodos, anual.año)  # este valor reemplaza encabezado['periodo_mes']
+        meses = self._generar_meses(periodos)
+
+        # modificamos el encabezado antes de retornar la respuesta.
+        encabezado = anual.detalles_json.get('encabezado')  # Buscamos el encabezado.
+        if encabezado:   # Si existe el encabezado.
+            anual.detalles_json['encabezado']['periodo_mes'] = meses  # Modificamos los meses.
+            anual.detalles_json['encabezado']['periodo_anio'] = anual.año  # Reasignamos el año, redundante pero igual.
+
+        # Generamos la respuesta.
         contenido = ResumenAnualContenido(**anual.detalles_json) if anual.detalles_json else ResumenAnualContenido()
         return ResumenAnualResponse(
             id=anual.id,
@@ -237,6 +257,6 @@ class ResumenAnualService:
             periodos_incluidos=periodos,
             contenido=contenido,
             meses_incluidos_count=meses_count,
-            rango_texto=self._generar_rango_texto(periodos, anual.año),
+            rango_texto=rango_de_texto,
         )
 

@@ -17,16 +17,16 @@ def parse_detalle_ventas(bytes_content: bytes):
     if not lines:
         raise ValueError("El archivo está vacío")
 
-    # 2. Modificamos solo la primera línea (el header)
-    header = lines[0].rstrip('\n\r')  # quitamos salto de línea si existe
-    # Agregamos ; al final si no lo tiene ya
+    # 2. Modificamos solo la primera línea (el header).
+    header = lines[0].rstrip('\n\r')  # quitamos salto de línea si existe.
+    # Agregamos ; al final si no lo tiene ya.
     if not header.endswith(';'):
         header += ';'
 
     # 3. Reconstruimos el contenido completo con el header corregido
-    new_content = header + '\n' + '\n'.join(lines[1:])
+    new_content = header + '\n' + '\n'.join(lines[1:])  # Acá faltaba un salto de línea.
 
-    # 4. Ahora sí leemos con pandas usando el contenido modificado
+    # 4. Ahora sí leemos con pandas usando el contenido modificado.
     df = pd.read_csv(
         StringIO(new_content),
         sep=';',
@@ -37,7 +37,7 @@ def parse_detalle_ventas(bytes_content: bytes):
         engine='python'
     )
 
-    # 5. Limpieza de columnas y valores (igual que antes)
+    # 5. Limpieza de columnas y valores.
     df.columns = df.columns.str.strip()
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
@@ -55,14 +55,14 @@ def parse_detalle_ventas(bytes_content: bytes):
     ]
     for col in numeric_cols:
         if col in df.columns:
-            # 1. Reemplazar valores no numéricos por '0' (como string)
+            # Reemplazar valores no numéricos por '0' (como string).
             df[col] = df[col].replace(['', '-', '--', 'N/A'], '0')
-            # 2. Forzamos todo a string ANTES de usar .str
+            # Forzamos todo a string ANTES de usar .str.
             df[col] = df[col].astype(str)
-            # 3. Ahora limpiamos el formato chileno sin miedo
-            df[col] = df[col].str.replace('.', '', regex=False)      # quita puntos de miles
-            df[col] = df[col].str.replace(',', '.', regex=False)     # coma → punto decimal
-            # 4. Finalmente convertimos a número
+            # Ahora limpiamos el formato chileno.
+            df[col] = df[col].str.replace('.', '', regex=False)      # quita puntos de miles.
+            df[col] = df[col].str.replace(',', '.', regex=False)     # quita la coma.
+            # Finalmente convertimos a número
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
     # 7. Fechas.

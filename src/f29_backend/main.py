@@ -99,11 +99,6 @@ app.include_router(vistaGestorF29Router.router)
 app.include_router(vistaResumenF29Router.router)
 
 
-""" # Servir React como SPA
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-app.mount("/", StaticFiles(directory=static_dir, html=True), name="static") """
-
-
 # Root
 @app.get("/")
 async def root():

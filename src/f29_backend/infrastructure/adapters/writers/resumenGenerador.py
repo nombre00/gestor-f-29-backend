@@ -481,7 +481,7 @@ def resumenGenerador3(
     TotalT = int(resumen.IVAPP) + int(resumen.remuneraciones['impt_unico']) + int(resumen.honorarios['retencion']) + int(resumen.remuneraciones['rem_3porc']) + resumen.honorarios['cod155'] + int(resumen.ppm['ppm'] + resumen.ppm['PPM2_valor'] + resumen.ppm['PPM_transportista_valor'])
     resumen.TT = TotalT
 
-    # LLenamos el encabezado usando datos del libro de remuneraciones. 
+    # LLenamos el encabezado usando datos del libro de remuneraciones.  
     encabezado = {
         'titulo': '',
         'periodo_mes': '',

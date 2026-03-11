@@ -12,7 +12,7 @@ from f29_backend.api.schemas.resumenAnualSchema import  ResumenAnualResponse, Re
 from f29_backend.infrastructure.persistence.repository.resumenAnualRepository import ResumenAnualRepository, EstadoResumenAnual
 
 
-# Prefijo de las rutas de este archivo.
+# Prefijo de las rutas de este archivo. 
 router = APIRouter(prefix="/api/f29", tags=["f29"])
 
 
