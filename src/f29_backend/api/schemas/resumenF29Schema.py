@@ -61,7 +61,7 @@ class ResumenF29ListItem(BaseModel):
     cliente_id: int
     rut_cliente: str
     razon_social_cliente: str
-    nro_cliente: int | None = None
+    nro_cliente: str | None = None
     periodo: str = Field(..., min_length=7, max_length=7, pattern=r"^\d{4}-\d{2}$")  # ← fix: str en vez de date
     estado: EstadoF29
     iva_a_pagar: Optional[Decimal]
@@ -103,7 +103,7 @@ class ClienteSinResumenItem(BaseModel):
     rut: str
     razon_social: str
     nombre_comercial: Optional[str]
-    nro_cliente: Optional[int] = None
+    nro_cliente: Optional[str] = None
 
     class Config:
         from_attributes = True

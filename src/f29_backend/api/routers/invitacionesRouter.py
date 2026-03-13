@@ -15,16 +15,9 @@ router = APIRouter(prefix="/api/invitaciones", tags=["invitaciones"])
 
 
 
+# Crea nueva invitación con un link de registro.
 @router.post("", response_model=InvitacionResponse, status_code=status.HTTP_201_CREATED)
-async def crear_invitacion(
-    invitacion_data: InvitacionCreate,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))
-):
-    """
-    Crear una nueva invitación (solo admins).
-    Envía un email al usuario invitado con un link de registro.
-    """
+async def crear_invitacion(invitacion_data: InvitacionCreate,db: Session = Depends(get_db),current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))):
     # Verificar que el email no esté ya registrado
     usuario_existente = db.query(Usuario).filter(Usuario.email == invitacion_data.email).first()
     if usuario_existente:
@@ -38,12 +31,13 @@ async def crear_invitacion(
         Invitacion.usado == False,
         Invitacion.expires_at > datetime.utcnow()
     ).first()
+    # Si la invitación existe
     if invitacion_existente:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ya existe una invitación pendiente para este email"
         )
-    # Crear la invitación
+    # Crear la invitación si no existe
     nueva_invitacion = Invitacion(
         email=invitacion_data.email,
         nombre=invitacion_data.nombre,
@@ -54,9 +48,10 @@ async def crear_invitacion(
         empresa_id=current_user.empresa_id,
         invitado_por_usuario_id=current_user.id
     )
-    db.add(nueva_invitacion)
-    db.commit()
-    db.refresh(nueva_invitacion)
+    db.add(nueva_invitacion)  # agregamos la nueva invitacion
+    db.commit()  # confirmamos
+    db.refresh(nueva_invitacion)  # refrescamos
+
     # Enviar email de invitación
     try:
         await enviar_email_invitacion(
@@ -77,14 +72,12 @@ async def crear_invitacion(
 
 
 
+# Lista las invitaciones pendientes, el dashboard de ADMIN ocupa esto.
 @router.get("/pendientes", response_model=InvitacionListResponse)
 def listar_invitaciones_pendientes(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))
 ):
-    """
-    Listar todas las invitaciones pendientes de la empresa (solo admins)
-    """
     invitaciones = db.query(Invitacion).filter(
         Invitacion.empresa_id == current_user.empresa_id,
         Invitacion.usado == False
@@ -96,15 +89,9 @@ def listar_invitaciones_pendientes(
 
 
 
+# Reenviar email de invitación y extender fecha de expiración
 @router.post("/{invitacion_id}/reenviar", status_code=status.HTTP_200_OK)
-async def reenviar_invitacion(
-    invitacion_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))
-):
-    """
-    Reenviar email de invitación y extender fecha de expiración
-    """
+async def reenviar_invitacion(invitacion_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))):
     invitacion = db.query(Invitacion).filter(
         Invitacion.id == invitacion_id,
         Invitacion.empresa_id == current_user.empresa_id
@@ -139,15 +126,9 @@ async def reenviar_invitacion(
 
 
 
+# Cancelar una invitación pendiente.
 @router.delete("/{invitacion_id}", status_code=status.HTTP_200_OK)
-def cancelar_invitacion(
-    invitacion_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))
-):
-    """
-    Cancelar una invitación pendiente
-    """
+def cancelar_invitacion(invitacion_id: int,db: Session = Depends(get_db),current_user: Usuario = Depends(require_role([RolUsuario.SUPER, RolUsuario.ADMIN]))):
     invitacion = db.query(Invitacion).filter(
         Invitacion.id == invitacion_id,
         Invitacion.empresa_id == current_user.empresa_id
@@ -168,14 +149,9 @@ def cancelar_invitacion(
 
 
 
+# Completar registro usando el token de invitación (endpoint público)
 @router.post("/completar-registro", response_model=dict)
-def completar_registro(
-    registro_data: CompletarRegistro,
-    db: Session = Depends(get_db)
-):
-    """
-    Completar registro usando el token de invitación (endpoint público)
-    """
+def completar_registro(registro_data: CompletarRegistro,db: Session = Depends(get_db)):
     # Buscar invitación por token
     invitacion = db.query(Invitacion).filter(
         Invitacion.token == registro_data.token
@@ -223,16 +199,9 @@ def completar_registro(
     }
 
 
-
+# Validar si un token de invitación es válido (endpoint público), sado para mostrar el formulario de registro
 @router.get("/validar-token/{token}", response_model=dict)
-def validar_token_invitacion(
-    token: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Validar si un token de invitación es válido (endpoint público)
-    Usado para mostrar el formulario de registro
-    """
+def validar_token_invitacion(token: str,db: Session = Depends(get_db)):
     invitacion = db.query(Invitacion).filter(
         Invitacion.token == token
     ).first()

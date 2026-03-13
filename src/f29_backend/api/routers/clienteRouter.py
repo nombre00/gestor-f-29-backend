@@ -58,12 +58,6 @@ def crear_cliente(cliente_data: ClienteCreate,db: Session = Depends(get_db),curr
     # Verificar RUT duplicado en la empresa
     if repo.find_by_rut(current_user.empresa_id, cliente_data.rut):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"Ya existe un cliente con el RUT {cliente_data.rut} en esta empresa")
-    print("=== DEBUG CURRENT USER ===")
-    print(type(current_user))
-    print(current_user)  # o current_user.model_dump() si es Pydantic
-    print("id:", getattr(current_user, 'id', None))
-    print("empresa_id:", getattr(current_user, 'empresa_id', None))
-    print("rol:", getattr(current_user, 'rol', None))
     
     asignado_a = current_user.id
 

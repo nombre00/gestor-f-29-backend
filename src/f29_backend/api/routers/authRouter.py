@@ -34,7 +34,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Credenciales inválidas",headers={"WWW-Authenticate": "Bearer"},)
     
-    # Autentificación que el usuatio esté activo.
+    # Autentificación que el usuario esté activo.
     if not user.activo:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Usuario inactivo o deshabilitado")
 

@@ -273,7 +273,7 @@ def guardar_resumen_f29(
     model.creado_por_usuario_id = creado_por_id
     model.estado = EstadoF29.BORRADOR  # Siempre borrador al guardar automáticamente
 
-    # Totales clave (ajusta nombres si difieren)
+    # Totales clave
     model.debito_fiscal = entity.ventas_total.get('iva', 0)
     model.credito_fiscal = entity.compras_total.get('iva_rec', 0)
     model.remanente_mes_anterior = entity.remanenteMesAnterior

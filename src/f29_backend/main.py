@@ -54,7 +54,7 @@ from f29_backend.api.routers import vistaGestorF29Router
 from f29_backend.api.routers import vistaResumenF29Router
 # Persistencia.
 from f29_backend.core.database import engine, get_db, Base
-from f29_backend.infrastructure.persistence.models import Empresa, Usuario, Cliente, resumenF29Modelo
+from f29_backend.infrastructure.persistence.models import Empresa, Usuario, Cliente, resumenF29Modelo  # Deprecado.
 
 
 # Crear app
@@ -75,7 +75,7 @@ origins = [
     "http://localhost:5173",       # Vite (el más común hoy en día)
     "http://127.0.0.1:3000",       # a veces el navegador usa 127.0.0.1 en vez de localhost
     "http://127.0.0.1:5173",
-    "http://localhost:5174",       # por si usas otro puerto en algún momento
+    "http://localhost:5174",       # por si usamos otro puerto en algún momento
 ]
 app.add_middleware(
     CORSMiddleware,
